@@ -1,0 +1,124 @@
+void BasicGLPane::keyPressed(wxKeyEvent& event) {}
+void BasicGLPane::keyReleased(wxKeyEvent& event)
+{
+    wxChar key = event.GetUnicodeKey();
+    if (key==WXK_NONE || key < 32)
+    {
+        switch (event.GetKeyCode())
+        {
+        case WXK_LEFT:
+            if (wxGetKeyState(WXK_CONTROL))
+            {
+                gSettings.baseHue -= gSettings.hueFraction;
+                render();
+            }
+            else
+            {
+                gSettings.centrer = gSettings.centrer.add(gSettings.scaler.mul( Quad(gSettings.moveFraction*(wxGetKeyState(WXK_SHIFT)?10:1))));
+                gM.restart();
+                gM.iterate();
+                render();
+            }
+            break;
+        case WXK_RIGHT:
+            if (wxGetKeyState(WXK_CONTROL))
+            {
+                gSettings.baseHue += gSettings.hueFraction;
+                render();
+            }
+            else
+            {
+                gSettings.centrer = gSettings.centrer.add(gSettings.scaler.mul( Quad(-gSettings.moveFraction*(wxGetKeyState(WXK_SHIFT)?10:1))));
+                gM.restart();
+                gM.iterate();
+                render();
+            }
+            break;
+        case WXK_UP:
+            if (wxGetKeyState(WXK_CONTROL))
+            {
+                gSettings.hueScale += gSettings.hueStep;
+                render();
+            }
+            else
+            {
+                gSettings.centrei = gSettings.centrei.add(gSettings.scalei.mul( Quad(-gSettings.moveFraction*(wxGetKeyState(WXK_SHIFT)?10:1))));
+                gM.restart();
+                gM.iterate();
+                render();
+            }
+            break;
+        case WXK_DOWN:
+            if (wxGetKeyState(WXK_CONTROL))
+            {
+                gSettings.hueScale -= gSettings.hueStep;
+                render();
+            }
+            else
+            {
+                gSettings.centrei = gSettings.centrei.add(gSettings.scalei.mul( Quad(gSettings.moveFraction*(wxGetKeyState(WXK_SHIFT)?10:1))));
+                gM.restart();
+                gM.iterate();
+                render();
+            }
+            break;
+        case WXK_PAGEUP:
+            if (wxGetKeyState(WXK_CONTROL))
+            {
+                if (gSettings.thresh == gSettings.minThresh)
+                    return;
+                gSettings.thresh /= 1.0 + gSettings.threshFraction;
+                if (gSettings.thresh < gSettings.minThresh)
+                    gSettings.thresh = gSettings.minThresh;
+                gM.restart();
+                gM.iterate();
+                render();
+            }
+            else
+            {
+                gSettings.scaler = gSettings.scaler.mul(Quad(1.0 + gSettings.moveFraction*(wxGetKeyState(WXK_SHIFT)?10:1)));
+                gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight/gSettings.winWidth));
+                gSetZoom();
+                gM.restart();
+                gM.iterate();
+                render();
+            }
+            break;
+        case WXK_PAGEDOWN:
+            if (wxGetKeyState(WXK_CONTROL))
+            {
+                if (gSettings.thresh == gSettings.maxThresh)
+                    return;
+                gSettings.thresh *= 1.0 + gSettings.threshFraction;
+                if (gSettings.thresh > gSettings.maxThresh)
+                    gSettings.thresh = gSettings.maxThresh;
+                gM.restart();
+                gM.iterate();
+                render();
+            }
+            else
+            {
+                gSettings.scaler = gSettings.scaler.mul(Quad(1.0 - gSettings.moveFraction*(wxGetKeyState(WXK_SHIFT)?10:1)));
+                gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight/gSettings.winWidth));
+                gSetZoom();
+                gM.restart();
+                gM.iterate();
+                render();
+            }
+            break;
+        case WXK_ESCAPE:
+            gAlert(wxT("Press OK to continue or CANCEL to exit"));
+            break;
+        case WXK_TAB:
+            gM.precision();
+            gM.restart();
+            gM.iterate();
+            render();
+        }
+    }
+    else
+    {
+//            message = wxString::Format(wxT("%c"),event.GetUnicodeKey());
+    }
+//        sb->SetStatusText(wxString::Format(wxT("%s%s%s%s"),wxGetKeyState(WXK_CONTROL)?"[CTRL]":"",wxGetKeyState(WXK_SHIFT)?"[SHIFT]":"", wxGetKeyState(WXK_ALT)?"[ALT]":"", message));
+}

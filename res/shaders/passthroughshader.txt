@@ -1,0 +1,16 @@
+#version 410 core
+
+// Input vertex data, different for all executions of this shader.
+layout(location = 0) in vec2 vUV;
+
+// Output data ; will be interpolated for each fragment.
+out vec2 fUV;
+
+void main(){
+
+	gl_Position.xy = vUV;
+	gl_Position.z = 0.0;
+	gl_Position.w = 1.0;
+
+    fUV = vUV;
+}
