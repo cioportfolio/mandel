@@ -22,6 +22,8 @@ bool buildWinData();
 //Input handler
 bool handleKeys(unsigned char key, int x, int y);
 
+void render();
+
 //Frees media and shuts down SDL
 void close();
 
@@ -107,6 +109,7 @@ bool handleWindow(SDL_WindowEvent we)
 		gM.resize();
 		gM.restart();
 		gM.iterate();
+		render();
 
 		printf("Canvas Size %d / %d", w, h);
 
@@ -115,106 +118,128 @@ bool handleWindow(SDL_WindowEvent we)
 	return false;
 }
 
-bool handleKeys(SDL_Keysym key, int x, int y)
+void handleKeys(SDL_Keysym key)
 {
-/*	if (key.mod & KMOD_SHIFT)
-	{
-		if (key.sym == SDLK_f)
-		{
-			gView = gSMoFo * gView;
-		}
-		if (key.sym == SDLK_b)
-		{
-			gView = gSMoBa * gView;
-		}
-		if (key.sym == SDLK_UP)
-		{
-			gView = gSRoUp * gView;
-			return true;
-		}
-		if (key.sym == SDLK_DOWN)
-		{
-			gView = gSRoDo * gView;
-			return true;
-		}
-		if (key.sym == SDLK_LEFT)
-		{
-			vec4 a4 = gView*vec4(0.0,0.0,1.0,0.0);
-			vec3 a3 = vec3(a4.x,a4.y,a4.z);
-			gSRoLe = rotate(mat4(1.0f),float(-gRoSt/180.0*M_PI*gShiftScale), a3);
-			gView = gSRoLe * gView;
-			return true;
-		}
-		if (key.sym == SDLK_RIGHT)
-		{
-			vec4 a4 = gView*vec4(0.0,0.0,1.0,0.0);
-			vec3 a3 = vec3(a4.x,a4.y,a4.z);
-			gSRoRi = rotate(mat4(1.0f),float(gRoSt/180.0*M_PI*gShiftScale), a3);
-			gView = gSRoRi * gView;
-			return true;
-		}
+	bool shiftKey = key.mod & KMOD_SHIFT;
+	bool ctrlKey = key.mod & KMOD_CTRL;
 
-		return false;
+	switch (key.sym) {
+	case SDLK_LEFT:
+		if (ctrlKey)
+		{
+			gSettings.baseHue -= gSettings.hueFraction;
+			render();
+		}
+		else
+		{
+			gSettings.centrer = gSettings.centrer.add(gSettings.scaler.mul(Quad(gSettings.moveFraction * (shiftKey ? 10 : 1))));
+			gM.restart();
+			gM.iterate();
+			render();
+		}
+		break;
+	case SDLK_RIGHT:
+		if (ctrlKey)
+		{
+			gSettings.baseHue += gSettings.hueFraction;
+			render();
+		}
+		else
+		{
+			gSettings.centrer = gSettings.centrer.add(gSettings.scaler.mul(Quad(-gSettings.moveFraction * (shiftKey ? 10 : 1))));
+			gM.restart();
+			gM.iterate();
+			render();
+		}
+		break;
+	case SDLK_UP:
+		if (ctrlKey)
+		{
+			gSettings.hueScale += gSettings.hueStep;
+			render();
+		}
+		else
+		{
+			gSettings.centrei = gSettings.centrei.add(gSettings.scalei.mul(Quad(-gSettings.moveFraction * (shiftKey ? 10 : 1))));
+			gM.restart();
+			gM.iterate();
+			render();
+		}
+		break;
+	case SDLK_DOWN:
+		if (ctrlKey)
+		{
+			gSettings.hueScale -= gSettings.hueStep;
+			render();
+		}
+		else
+		{
+			gSettings.centrei = gSettings.centrei.add(gSettings.scalei.mul(Quad(gSettings.moveFraction * (shiftKey ? 10 : 1))));
+			gM.restart();
+			gM.iterate();
+			render();
+		}
+		break;
+	case SDLK_PAGEUP:
+		if (ctrlKey)
+		{
+			if (gSettings.thresh == gSettings.minThresh)
+				return;
+			gSettings.thresh /= 1.0 + gSettings.threshFraction;
+			if (gSettings.thresh < gSettings.minThresh)
+				gSettings.thresh = gSettings.minThresh;
+			gM.restart();
+			gM.iterate();
+			render();
+		}
+		else
+		{
+			gSettings.scaler = gSettings.scaler.mul(Quad(1.0 + gSettings.moveFraction * (shiftKey ? 10 : 1)));
+			gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
+			gM.restart();
+			gM.iterate();
+			render();
+		}
+		break;
+	case SDLK_PAGEDOWN:
+		if (ctrlKey)
+		{
+			if (gSettings.thresh == gSettings.maxThresh)
+				return;
+			gSettings.thresh *= 1.0 + gSettings.threshFraction;
+			if (gSettings.thresh > gSettings.maxThresh)
+				gSettings.thresh = gSettings.maxThresh;
+			gM.restart();
+			gM.iterate();
+			render();
+		}
+		else
+		{
+			gSettings.scaler = gSettings.scaler.mul(Quad(1.0 - gSettings.moveFraction * (shiftKey ? 10 : 1)));
+			gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
+			gM.restart();
+			gM.iterate();
+			render();
+		}
+		break;
+//	case SDLK_ESCAPE:
+//		gAlert(wxT("Press OK to continue or CANCEL to exit"));
+//		break;
+	case SDLK_TAB:
+		gM.precision();
+		gM.restart();
+		gM.iterate();
+		render();
 	}
-	else
-	{
-		if (key.sym == SDLK_p) gFly = !gFly;
-
-		if (key.sym == SDLK_f)
-		{
-			gView = gMoFo * gView;
-		}
-		if (key.sym == SDLK_b)
-		{
-			gView = gMoBa * gView;
-		}
-		if (key.sym == SDLK_UP)
-		{
-			gView = gRoUp * gView;
-			return true;
-		}
-		if (key.sym == SDLK_DOWN)
-		{
-			gView = gRoDo * gView;
-			return true;
-		}
-		if (key.sym == SDLK_LEFT)
-		{
-			vec4 a4 = gView*vec4(0.0,0.0,1.0,0.0);
-			vec3 a3 = vec3(a4.x,a4.y,a4.z);
-			gRoLe = rotate(mat4(1.0f),float(-gRoSt/180.0*M_PI), a3);
-			gView = gRoLe * gView;
-			return true;
-		}
-		if (key.sym == SDLK_RIGHT)
-		{
-			vec4 a4 = gView*vec4(0.0,0.0,1.0,0.0);
-			vec3 a3 = vec3(a4.x,a4.y,a4.z);
-			gRoRi = rotate(mat4(1.0f),float(gRoSt/180.0*M_PI), a3);
-			gView = gRoRi * gView;
-			return true;
-		}
-		if (key.sym == SDLK_n)
-		{
-			update();
-			return false;
-		}
-		if (key.sym == SDLK_u)
-		{
-			gUpdate = !gUpdate;
-			return true;
-		}
-	} */
-	return false;
 }
 
-bool handleMouse(SDL_Event e)
+void handleMouse(SDL_Event e)
 {
-	const Uint8 *state = SDL_GetKeyboardState(NULL);
+	/*const Uint8* state = SDL_GetKeyboardState(NULL);
 	bool shiftKey = (state[SDL_SCANCODE_LSHIFT] == 1 || state[SDL_SCANCODE_RSHIFT] == 1);
 	int direction = 1;
 	
-	/*if (e.type == SDL_MOUSEBUTTONUP)
+	if (e.type == SDL_MOUSEBUTTONUP)
 	{
 		SDL_MouseButtonEvent m = e.button;
 		if (m.button == SDL_BUTTON_LEFT && m.clicks == 2)
@@ -291,9 +316,14 @@ bool handleMouse(SDL_Event e)
 			return true;
 		}
 		
-	}*/
+	} */
+}
 
-	return false;
+void render()
+{
+	gM.paint();
+	glFlush();
+	SDL_GL_SwapWindow(gGLWindow);
 }
 
 
@@ -318,7 +348,7 @@ int main(int argc, char *args[])
 	else
 	{
 		//Main loop flag
-		bool quit = false, redraw, haltLoop;
+		bool quit = false;
 
 		//Event handler
 		SDL_Event e;
@@ -329,12 +359,9 @@ int main(int argc, char *args[])
 			if (gM.iterating())
 			{
 				gM.iterate();
-				gM.paint();
-				glFlush();
-				SDL_GL_SwapWindow(gGLWindow);
+				render();
 			}
 
-			redraw = false;
 			while (SDL_PollEvent(&e) != 0 && !quit)
 			{
 				//User requests quit
@@ -348,21 +375,20 @@ int main(int argc, char *args[])
 					{
 						quit = true;
 					}
-/*				}
-				else if (e.type == SDL_KEYUP)
-				{*/
-					int x = 0, y = 0;
-					SDL_GetMouseState(&x, &y);
-					redraw = redraw || handleKeys(e.key.keysym, x, y);
+					else
+					{
+						handleKeys(e.key.keysym);
+					}
 				}
 				else if (e.type == SDL_WINDOWEVENT)
 				{
-					redraw = redraw || handleWindow(e.window);
+					handleWindow(e.window);
 				}
 				else if (e.type == SDL_MOUSEMOTION || e.type == SDL_MOUSEWHEEL || e.type == SDL_MOUSEBUTTONUP || e.type == SDL_MOUSEBUTTONDOWN)
-					redraw = redraw || handleMouse(e);
+				{
+					handleMouse(e);
+				}
 			}
-			if (redraw) haltLoop = true;
 		}
 
 		//Free resources and close SDL
