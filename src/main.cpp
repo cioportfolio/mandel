@@ -34,6 +34,8 @@ SDL_Window *gGLWindow = nullptr;
 SDL_GLContext gContext;
 
 
+
+
 bool init()
 {
 	//Initialization flag
@@ -233,90 +235,114 @@ void handleKeys(SDL_Keysym key)
 	}
 }
 
+int gDragStartx, gDragStarty;
+bool gDragging = false;
+
 void handleMouse(SDL_Event e)
 {
-	/*const Uint8* state = SDL_GetKeyboardState(NULL);
+	const Uint8* state = SDL_GetKeyboardState(NULL);
 	bool shiftKey = (state[SDL_SCANCODE_LSHIFT] == 1 || state[SDL_SCANCODE_RSHIFT] == 1);
-	int direction = 1;
-	
-	if (e.type == SDL_MOUSEBUTTONUP)
+	bool ctrlKey = (state[SDL_SCANCODE_LCTRL] == 1 || state[SDL_SCANCODE_RCTRL] == 1);
+	if (gDragging && e.type == SDL_MOUSEMOTION)
 	{
-		SDL_MouseButtonEvent m = e.button;
-		if (m.button == SDL_BUTTON_LEFT && m.clicks == 2)
+		int nx, ny;
+		SDL_GetMouseState(&nx, &ny);
+		int x = nx - gDragStartx;
+		int y = ny - gDragStarty;
+		gDragStartx = nx;
+		gDragStarty = ny;
+
+		if (ctrlKey)
 		{
-			return true;
+			gSettings.hueScale -= gSettings.hueStep * y / 100.0;
+			gSettings.baseHue += gSettings.hueFraction + x / 100.0;
+			render();
 		}
-		if (m.button == SDL_BUTTON_RIGHT && m.clicks == 2)
+		else
 		{
-			return true;
+			gSettings.centrer = gSettings.centrer.add(gSettings.scaler.mul(Quad((double)-x / gSettings.winWidth * 2.0)));
+			gSettings.centrei = gSettings.centrei.add(gSettings.scalei.mul(Quad((double)y / gSettings.winHeight *2.0)));
+			gM.restart();
+			gM.iterate();
+			render();
 		}
 	}
 	if (e.type == SDL_MOUSEWHEEL)
 	{
-
-		if (shiftKey)
+		if (ctrlKey)
 		{
-			if ((e.wheel.y+e.wheel.x) * direction > 0)
+			if (e.wheel.y + e.wheel.x > 0)
 			{
-				return true;
+				if (gSettings.thresh == gSettings.maxThresh)
+					return;
+				gSettings.thresh *= 1.0 + gSettings.threshFraction;
+				if (gSettings.thresh > gSettings.maxThresh)
+					gSettings.thresh = gSettings.maxThresh;
+				gM.restart();
+				gM.iterate();
+				render();
 			}
-			if ((e.wheel.y+e.wheel.x) *direction < 0)
+			else
 			{
-				return true;
+				if (gSettings.thresh == gSettings.minThresh)
+					return;
+				gSettings.thresh /= 1.0 + gSettings.threshFraction;
+				if (gSettings.thresh < gSettings.minThresh)
+					gSettings.thresh = gSettings.minThresh;
+				gM.restart();
+				gM.iterate();
+				render();
 			}
-			return false;
 		}
-		int x = 0, y = 0;
-		SDL_GetMouseState(&x, &y);
-		if (e.wheel.y*direction != 0)
+		else
 		{
-			gView = translate(mat4(1.0f), vec3(0.0,0.0,gMoSt*float(e.wheel.y * direction))) * gView;
+			int dir = (e.wheel.y + e.wheel.x > 0) ? 1.0 : -1.0;
+			int x = 0, y = 0;
+			SDL_GetMouseState(&x, &y);
+			gSettings.centrer = gSettings.centrer.add(gSettings.scaler.mul(Quad(2.0 * x / gSettings.winWidth - 1.0)));
+			gSettings.centrei = gSettings.centrei.add(gSettings.scalei.mul(Quad(1.0 - 2.0 * y / gSettings.winHeight)));
+			gSettings.scaler = gSettings.scaler.mul(Quad(1.0 - dir * gSettings.zoomFraction));
+			gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
+			SDL_WarpMouseInWindow(gGLWindow, gSettings.winWidth / 2, gSettings.winHeight / 2);
+			gM.restart();
+			gM.iterate();
+			render();
 		}
 	}
-	if (e.type == SDL_MOUSEMOTION)
+	if (e.type == SDL_MOUSEBUTTONUP)
 	{
-		if (gFly) {
-			if (e.motion.yrel != 0)
-			{
-				gView = rotate(mat4(1.0f),float(gRoSt/180.0*M_PI*e.motion.yrel), vec3(1.0,0.0,0.0)) * gView;
-			}
-			if (e.motion.xrel < 0)
-			{
-				vec4 a4 = gView*vec4(0.0,0.0,1.0,0.0);
-				vec3 a3 = vec3(a4.x,a4.y,a4.z);
-				gRoLe = rotate(mat4(1.0f),float(-gRoSt/180.0*M_PI*gFlyScale), a3);
-				gView = gRoLe * gView;
-			}
-			if (e.motion.xrel > 0)
-			{
-				vec4 a4 = gView*vec4(0.0,0.0,1.0,0.0);
-				vec3 a3 = vec3(a4.x,a4.y,a4.z);
-				gRoRi = rotate(mat4(1.0f),float(gRoSt/180.0*M_PI*gFlyScale), a3);
-				gView = gRoRi * gView;
-			}
-			return true;
-		}
-		if (shiftKey)
+		gDragging = false;
+		SDL_MouseButtonEvent m = e.button;
+		int x = 0, y = 0;
+		SDL_GetMouseState(&x, &y);
+		if (m.button == SDL_BUTTON_LEFT && m.clicks == 2)
 		{
-			return false;
+			gSettings.centrer = gSettings.centrer.add(gSettings.scaler.mul(Quad(2.0 * x / gSettings.winWidth - 1.0)));
+			gSettings.centrei = gSettings.centrei.add(gSettings.scalei.mul(Quad(1.0 - 2.0 * y / gSettings.winHeight)));
+			gSettings.scaler = gSettings.scaler.mul(Quad(1.0 - gSettings.zoomFraction));
+			gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
+			SDL_WarpMouseInWindow(gGLWindow, gSettings.winWidth / 2, gSettings.winHeight / 2);
+			gM.restart();
+			gM.iterate();
+			render();
 		}
-		if ((e.motion.state & SDL_BUTTON_LMASK) > 0)
+		else if (m.button == SDL_BUTTON_RIGHT && m.clicks == 2)
 		{
-			if (e.motion.yrel != 0)
-			{
-				gView = rotate(mat4(1.0f),float(-gRoSt/180.0*M_PI*e.motion.yrel), vec3(1.0,0.0,0.0)) * gView;
-			}
-			if (e.motion.xrel != 0)
-			{
-				vec4 a4 = gView*vec4(0.0,0.0,1.0,0.0);
-				vec3 a3 = vec3(a4.x,a4.y,a4.z);
-				gRoLe = rotate(mat4(1.0f),float(-gRoSt/180.0*M_PI*e.motion.xrel), a3);
-				gView = gRoLe * gView;
-			}
-			return true;
+			gSettings.centrer = gSettings.centrer.add(gSettings.scaler.mul(Quad(2.0 * x / gSettings.winWidth - 1.0)));
+			gSettings.centrei = gSettings.centrei.add(gSettings.scalei.mul(Quad(1.0 - 2.0 * y / gSettings.winHeight)));
+			gSettings.scaler = gSettings.scaler.mul(Quad(1.0 + gSettings.zoomFraction));
+			gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
+			SDL_WarpMouseInWindow(gGLWindow, gSettings.winWidth / 2, gSettings.winHeight / 2);
+			gM.restart();
+			gM.iterate();
+			render();
 		}
-		
-	} */
+	}
+	if (e.type == SDL_MOUSEBUTTONDOWN)
+	{
+		SDL_GetMouseState(&gDragStartx, &gDragStarty);
+		gDragging = true;
+	}
 }
 
 void render()
