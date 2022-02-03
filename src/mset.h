@@ -6,6 +6,8 @@
 class Mset
 {
 public:
+    int gProgram = 0;
+    int gRes = 0;
     bool init();
     bool precision();
     bool restart();
@@ -39,7 +41,6 @@ private:
 //Graphics program
     GLuint gTextureVA = 0;
     GLuint gScreenVA = 0;
-    int gProgram = 0;
     GLuint gProgramID[2] = {0,0};
     GLuint gScreenPID = 0;
     GLint gCentreLocation = -1;
@@ -64,7 +65,6 @@ private:
     int gNoCoords = 0;
     GLint *gVBD = nullptr;
     GLuint *gIBD = nullptr;
-    int gRes=0;
     int gPrevRes=0;
     int gNoIndices=0;
     bool gInitialised=false;

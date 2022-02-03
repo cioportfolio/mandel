@@ -67,11 +67,6 @@ void initImGui()
 	//io.Fonts->AddFontFromFileTTF("../../misc/fonts/ProggyTiny.ttf", 10.0f);
 	//ImFont* font = io.Fonts->AddFontFromFileTTF("c:\\Windows\\Fonts\\ArialUni.ttf", 18.0f, NULL, io.Fonts->GetGlyphRangesJapanese());
 	//IM_ASSERT(font != NULL);
-
-	// Our state
-	bool show_demo_window = true;
-	bool show_another_window = false;
-	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 }
 
 
@@ -385,9 +380,9 @@ void handleMouse(SDL_Event e)
 	}
 }
 
-bool show_demo_window = true;
-bool show_another_window = false;
-ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+bool show_demo_window = false;
+bool showControls = false;
+bool showConstraints = false;
 
 void imGuiFrame()
 {
@@ -407,34 +402,52 @@ void imGuiFrame()
 		static float f = 0.0f;
 		static int counter = 0;
 
-		ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+		ImGui::Begin("Controls", &showControls);
 
-		ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
 		ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-		ImGui::Checkbox("Another Window", &show_another_window);
+		ImGui::Checkbox("Constraints", &showConstraints);
+		ImGui::Text("Window %i x %i", gSettings.winWidth, gSettings.winHeight);
+		ImGui::Text("Duration %f", gSettings.frameDuration);
+		if (ImGui::SliderInt("Threshold", &gSettings.thresh, gSettings.minThresh, gSettings.maxThresh))
+		{
+			gM.restart();
+			gM.iterate();
+		}
+		ImGui::Text("Centre: %f + %f i, Size: %f + %f i", gSettings.centrer, gSettings.centrei, gSettings.scaler, gSettings.scalei);
+		bool highPrec = (gM.gProgram == 1);
+		if (ImGui::Checkbox("Quad precision", &highPrec))
+		{
+			if (highPrec != (gM.gProgram == 1))
+			{
+				gM.precision();
+				gM.restart();
+				gM.iterate();
+			}
+		}
+		ImGui::InputFloat("Base Hue", &gSettings.baseHue);
+		ImGui::InputFloat("hueScale", &gSettings.hueScale);
+		ImGui::Text("Resolution %i", gM.gRes);
 
-		ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-		ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
-		if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-			counter++;
-		ImGui::SameLine();
-		ImGui::Text("counter = %d", counter);
-
-		ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
 		ImGui::End();
-	}
 
-	// 3. Show another simple window.
-	if (show_another_window)
-	{
-		ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-		ImGui::Text("Hello from another window!");
-		if (ImGui::Button("Close Me"))
-			show_another_window = false;
+
+		ImGui::Begin("Constraints", &showControls);
+		ImGui::SliderInt("MinRes", &gSettings.minRes, 1, 500);
+		ImGui::DragIntRange2("Threshold", &gSettings.minThresh, &gSettings.maxThresh, 1.0, 1, 100000000);
+		ImGui::SliderFloat("Phase target time", &gSettings.durationTarget, 1.0, 1000.0);
+		ImGui::SliderFloat("Duration filter", &gSettings.durationFilter, 0.0, 1.0);
+		ImGui::SliderInt("Duration factor for High precision", &gSettings.highCapFactor, 1, 25);
+		ImGui::InputDouble("Move fraction", &gSettings.moveFraction);
+		ImGui::InputDouble("Zoom fraction", &gSettings.zoomFraction);
+		ImGui::InputDouble("Threshold fraction", &gSettings.threshFraction);
+		ImGui::InputDouble("Hue fraction", &gSettings.hueFraction);
+		ImGui::InputDouble("Hue Step", &gSettings.hueStep);
+
 		ImGui::End();
+
 	}
 }
+
 
 void render()
 {
