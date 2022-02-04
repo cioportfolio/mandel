@@ -79,10 +79,10 @@ bool Mset::precision()
     }
     checkGLError(__LINE__);
 
-    if (gProgram)
+/*    if (gProgram)
         gLog("Switched to Quad(128bit) precision\n");
     else
-        gLog("Switched to Double(64bit) precision\n");
+        gLog("Switched to Double(64bit) precision\n");*/
 
     return true;
 }

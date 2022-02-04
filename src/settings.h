@@ -13,10 +13,10 @@ public:
     int minThresh = 1000;
     int thresh = 1000;
     long long frameCap = 25000 * 1024;
-    float frameDuration = 100;
-    float durationTarget = 100;
+    float durationTarget = 400;
     float durationFilter = 0.3;
     int highCapFactor = 8;
+    float quadZoom = 1e-13;
 
     double moveFraction = 1.0/64.0;
     double zoomFraction = 0.05;

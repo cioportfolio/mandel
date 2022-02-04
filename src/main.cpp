@@ -399,51 +399,80 @@ void imGuiFrame()
 
 	// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
 	{
-		static float f = 0.0f;
-		static int counter = 0;
-
 		ImGui::Begin("Controls", &showControls);
 
 		ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-		ImGui::Checkbox("Constraints", &showConstraints);
+		ImGui::Checkbox("Advanced", &showConstraints);
 		ImGui::Text("Window %i x %i", gSettings.winWidth, gSettings.winHeight);
-		ImGui::Text("Duration %f", gSettings.frameDuration);
-		if (ImGui::SliderInt("Threshold", &gSettings.thresh, gSettings.minThresh, gSettings.maxThresh))
+		if (ImGui::SliderInt("Threshold", &gSettings.thresh, gSettings.minThresh, gSettings.maxThresh, "%d", ImGuiSliderFlags_Logarithmic))
 		{
 			gM.restart();
 			gM.iterate();
 		}
-		ImGui::Text("Centre: %f + %f i, Size: %f + %f i", gSettings.centrer, gSettings.centrei, gSettings.scaler, gSettings.scalei);
-		bool highPrec = (gM.gProgram == 1);
-		if (ImGui::Checkbox("Quad precision", &highPrec))
+		double cr = gSettings.centrer.h;
+		double ci = gSettings.centrei.h;
+		if (ImGui::InputDouble("Centre ", &cr, 0, 0,"%e"))
 		{
-			if (highPrec != (gM.gProgram == 1))
-			{
-				gM.precision();
-				gM.restart();
-				gM.iterate();
-			}
+			gSettings.centrer = Quad(cr);
+			gM.restart();
+			gM.iterate();
 		}
-		ImGui::InputFloat("Base Hue", &gSettings.baseHue);
-		ImGui::InputFloat("hueScale", &gSettings.hueScale);
-		ImGui::Text("Resolution %i", gM.gRes);
+		ImGui::SameLine();
+		if (ImGui::InputDouble("+ i", &ci,0,0,"%e"))		{
+			gSettings.centrer = Quad(cr);
+			gM.restart();
+			gM.iterate();
+		}
+		float z = 1.0/(float)gSettings.scaler.h;
+		if (ImGui::SliderFloat("Zoom", &z, 1, 1e30, "%e", ImGuiSliderFlags_Logarithmic))
+		{
+			gSettings.scaler = Quad(1.0/z);
+			gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
+			gM.restart();
+			gM.iterate();
+		}
+		ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(gSettings.baseHue, 0.8, 0.8));
+		ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(gSettings.baseHue, 1, 1));
+		ImGui::PushStyleColor(ImGuiCol_FrameBgActive, (ImVec4)ImColor::HSV(gSettings.baseHue, 1, 1));
+		ImGui::SliderFloat("Base Hue", &gSettings.baseHue, 0.0, 1.0, "%.3f");
+		ImGui::PopStyleColor(3);
+		ImGui::SliderFloat("hueScale", &gSettings.hueScale, - 20.0f, 20.0f, "%.2f");
+		if (gM.iterating())
+		{
+			ImGui::Text("%i Bit. Resolution %i %i %% Batch duration %i", (gM.gProgram == 1)?128:64, gM.gRes, gM.gProgress, (int)gM.frameDuration);
+		}
+		else
+		{
+			ImGui::Text("Completed fractal");
+		}
 
 		ImGui::End();
 
-
-		ImGui::Begin("Constraints", &showControls);
-		ImGui::SliderInt("MinRes", &gSettings.minRes, 1, 500);
-		ImGui::DragIntRange2("Threshold", &gSettings.minThresh, &gSettings.maxThresh, 1.0, 1, 100000000);
-		ImGui::SliderFloat("Phase target time", &gSettings.durationTarget, 1.0, 1000.0);
-		ImGui::SliderFloat("Duration filter", &gSettings.durationFilter, 0.0, 1.0);
-		ImGui::SliderInt("Duration factor for High precision", &gSettings.highCapFactor, 1, 25);
-		ImGui::InputDouble("Move fraction", &gSettings.moveFraction);
-		ImGui::InputDouble("Zoom fraction", &gSettings.zoomFraction);
-		ImGui::InputDouble("Threshold fraction", &gSettings.threshFraction);
-		ImGui::InputDouble("Hue fraction", &gSettings.hueFraction);
-		ImGui::InputDouble("Hue Step", &gSettings.hueStep);
-
-		ImGui::End();
+		if (showConstraints)
+		{
+			ImGui::Begin("Advanced", &showConstraints);
+			ImGui::SliderInt("MinRes", &gSettings.minRes, 1, 500);
+			ImGui::DragIntRange2("Threshold Range", &gSettings.minThresh, &gSettings.maxThresh, 1.0, 1, 100000000);
+			ImGui::SliderFloat("Batch target time", &gSettings.durationTarget, 1.0, 1000.0);
+			ImGui::SliderFloat("Duration filter", &gSettings.durationFilter, 0.0, 1.0);
+			ImGui::SliderInt("Duration factor for High precision", &gSettings.highCapFactor, 1, 25);
+			ImGui::InputDouble("Move fraction", &gSettings.moveFraction);
+			ImGui::InputDouble("Zoom fraction", &gSettings.zoomFraction);
+			ImGui::InputDouble("Threshold fraction", &gSettings.threshFraction);
+			ImGui::InputDouble("Hue fraction", &gSettings.hueFraction);
+			ImGui::InputDouble("Hue Step", &gSettings.hueStep);
+			if (ImGui::InputFloat("Quad zoom level", &gSettings.quadZoom, 0, 0, "%e"))
+			{
+				bool highPrec = (gSettings.scaler.h < gSettings.quadZoom);
+				if (highPrec != (gM.gProgram == 1))
+				{
+					gM.precision();
+					gM.restart();
+					gM.iterate();
+				}
+			}
+			ImGui::End();
+		}
 
 	}
 }

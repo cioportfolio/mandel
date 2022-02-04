@@ -19,6 +19,11 @@ bool Mset::restart()
     glDrawBuffers(2, gDrawBuffers);
     glClearBufferiv(GL_COLOR, 1, gTexEmpty);
     checkGLError(__LINE__);
+    bool highPrec = (gSettings.scaler.h < gSettings.quadZoom);
+    if (highPrec != (gM.gProgram == 1))
+    {
+        gM.precision();
+    }
     return true;
 }
 
@@ -47,7 +52,7 @@ bool Mset::resize()
 
     buildWinData();
 
-    printf("Finished sizing window event (%i,%i)\n", gSettings.winWidth, gSettings.winHeight);
+    //printf("Finished sizing window event (%i,%i)\n", gSettings.winWidth, gSettings.winHeight);
     return true;
 }
 
@@ -60,7 +65,8 @@ void Mset::tuneBatch()
 {
         gIndStep = gNoIndices;
         long long total_iter = (long long) gNoIndices * gSettings.thresh * (1 + (gSettings.highCapFactor - 1)*gProgram);
-        while (total_iter > gSettings.frameCap*(durationTarget/frameDuration) && gIndStep > 1)
+        long long target_iter = gSettings.frameCap * (gSettings.durationTarget / frameDuration);
+        while (total_iter > target_iter && gIndStep > 1)
         {
             total_iter /= 2;
             gIndStep /= 2;
@@ -123,7 +129,7 @@ bool Mset::iterate()
         glBlitFramebuffer(0, 0, gSettings.winWidth, gSettings.winHeight, 0, 0, gSettings.winWidth, gSettings.winHeight, GL_COLOR_BUFFER_BIT, GL_NEAREST);
         gOutTexture = 1 - gOutTexture;
 
-        printf("Resolution %i %i%",gRes, (int)((100.0*gBatch/gNoIndices)));
+        gProgress = (int)((100.0*gBatch/gNoIndices));
 
         glBindVertexArray(gTextureVA);
         checkGLError(__LINE__);
@@ -196,7 +202,7 @@ bool Mset::iterate()
         _ftime(&endTime);
         endTime.time -= startTime.time;
         float newDuration = 1000.0 * endTime.time + endTime.millitm - startTime.millitm;
-        frameDuration = (1.0 - durationFilter)*frameDuration + durationFilter * newDuration;
+        frameDuration = (1.0 - gSettings.durationFilter)*frameDuration + gSettings.durationFilter * newDuration;
         tuneBatch();
         if (gBatch >= gNoIndices)
         {
@@ -204,8 +210,8 @@ bool Mset::iterate()
             gPrevRes = gRes;
             if (gRes > 1)
                 gRes /= 2;
-            else
-                gLog("Finished");
+            //else
+                //gLog("Finished");
         }
     }
     return true;
@@ -274,10 +280,10 @@ bool Mset::buildWinData()
 
     if (gVBD != nullptr)
     {
-        gLog("About to delete gVBD\n");
+        //gLog("About to delete gVBD\n");
         delete[] gVBD;
     }
-    gLog("About to create gVBD\n");
+    //gLog("About to create gVBD\n");
     gVBD = new GLint[gNoCoords];
     int i = 0;
     for (int y = 0; y < gSettings.winHeight; y++)

@@ -8,6 +8,8 @@ class Mset
 public:
     int gProgram = 0;
     int gRes = 0;
+    int gProgress = 100;
+    float frameDuration = 400;
     bool init();
     bool precision();
     bool restart();
@@ -70,9 +72,6 @@ private:
     bool gInitialised=false;
     int gBatch=0;
     int gIndStep=0;
-    float frameDuration = 400;
-    float durationTarget = 400;
-    float durationFilter = 0.3;
 };
 
 #endif
