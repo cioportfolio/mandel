@@ -382,7 +382,11 @@ void handleMouse(SDL_Event e)
 
 bool show_demo_window = false;
 bool showControls = false;
-bool showConstraints = false;
+
+bool InputDouble2(const char* label, double v[2], const char* format)
+{
+	return ImGui::InputScalarN(label, ImGuiDataType_Double, v, 2, NULL, NULL, format, ImGuiInputTextFlags_CharsScientific);
+}
 
 void imGuiFrame()
 {
@@ -399,27 +403,27 @@ void imGuiFrame()
 
 	// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
 	{
+		ImGui::SetNextWindowCollapsed(true, 2);
 		ImGui::Begin("Controls", &showControls);
-
-		ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-		ImGui::Checkbox("Advanced", &showConstraints);
+		if (gM.iterating())
+		{
+			ImGui::Text("%i Bit. Resolution %i %i %% Batch duration %i", (gM.gProgram == 1) ? 128 : 64, gM.gRes, gM.gProgress, (int)gM.frameDuration);
+		}
+		else
+		{
+			ImGui::Text("Completed fractal");
+		}
 		ImGui::Text("Window %i x %i", gSettings.winWidth, gSettings.winHeight);
 		if (ImGui::SliderInt("Threshold", &gSettings.thresh, gSettings.minThresh, gSettings.maxThresh, "%d", ImGuiSliderFlags_Logarithmic))
 		{
 			gM.restart();
 			gM.iterate();
 		}
-		double cr = gSettings.centrer.h;
-		double ci = gSettings.centrei.h;
-		if (ImGui::InputDouble("Centre ", &cr, 0, 0,"%e"))
+		double c[2] = { gSettings.centrer.h,gSettings.centrei.h };
+		if (InputDouble2("Centre ", c, "%e"))
 		{
-			gSettings.centrer = Quad(cr);
-			gM.restart();
-			gM.iterate();
-		}
-		ImGui::SameLine();
-		if (ImGui::InputDouble("+ i", &ci,0,0,"%e"))		{
-			gSettings.centrer = Quad(cr);
+			gSettings.centrer = Quad(c[0]);
+			gSettings.centrei = Quad(c[1]);
 			gM.restart();
 			gM.iterate();
 		}
@@ -437,21 +441,16 @@ void imGuiFrame()
 		ImGui::SliderFloat("Base Hue", &gSettings.baseHue, 0.0, 1.0, "%.3f");
 		ImGui::PopStyleColor(3);
 		ImGui::SliderFloat("hueScale", &gSettings.hueScale, - 20.0f, 20.0f, "%.2f");
-		if (gM.iterating())
-		{
-			ImGui::Text("%i Bit. Resolution %i %i %% Batch duration %i", (gM.gProgram == 1)?128:64, gM.gRes, gM.gProgress, (int)gM.frameDuration);
-		}
-		else
-		{
-			ImGui::Text("Completed fractal");
-		}
 
-		ImGui::End();
 
-		if (showConstraints)
+		if (ImGui::CollapsingHeader("Advanced"))
 		{
-			ImGui::Begin("Advanced", &showConstraints);
-			ImGui::SliderInt("MinRes", &gSettings.minRes, 1, 500);
+			int rp = floor(log2(gSettings.minRes));
+			std::string label = "Minimum res = " + std::to_string(gSettings.minRes);
+			if (ImGui::SliderInt(label.c_str(), &rp, 0, 8))
+			{
+				gSettings.minRes = exp2(rp);
+			}
 			ImGui::DragIntRange2("Threshold Range", &gSettings.minThresh, &gSettings.maxThresh, 1.0, 1, 100000000);
 			ImGui::SliderFloat("Batch target time", &gSettings.durationTarget, 1.0, 1000.0);
 			ImGui::SliderFloat("Duration filter", &gSettings.durationFilter, 0.0, 1.0);
@@ -471,8 +470,9 @@ void imGuiFrame()
 					gM.iterate();
 				}
 			}
-			ImGui::End();
+			ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
 		}
+		ImGui::End();
 
 	}
 }
