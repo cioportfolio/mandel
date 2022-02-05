@@ -40,9 +40,12 @@ public:
     bool load (const char* filename);
     bool save (const char* filename);
 
-//    double movStartZoom = 1.0;
-    float movZoomFact = 1.41;
+    double movZoomStart = 1.0;
+    double movZoomEnd = 1e-12;
     int movFrames = 100;
-    float movHueScaleFact = 1.01;
+    float movHueScaleStart = 2.0 / 3.0;
+    float movHueScaleEnd = 2.0;
+    int movThreshStart = 1000;
+    int movThreshEnd = 10000;
 };
 #endif // SETTINGS_H_INCLUDED

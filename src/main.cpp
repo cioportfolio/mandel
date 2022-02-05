@@ -393,6 +393,24 @@ bool gMovForward = true;
 bool gMovLoop = true;
 bool gMovBounce = true;
 int gMovFrame = 0;
+double gMovZoomFact = 1.0;
+double gMovHueFact = 1.0;
+double gMovThreshFact = 1.0;
+
+double findBase(double start, double end, int steps)
+{
+	double n = end / start;
+	double s = steps;
+	double f = exp(log(n) / s);
+	return f;
+}
+
+void movReset()
+{
+	gMovZoomFact = findBase(gSettings.movZoomStart, gSettings.movZoomEnd, gSettings.movFrames);
+	gMovHueFact = findBase(gSettings.movHueScaleStart, gSettings.movHueScaleEnd, gSettings.movFrames);
+	gMovThreshFact = findBase(gSettings.movThreshStart, gSettings.movThreshEnd, gSettings.movFrames);
+}
 
 void movNextFrame() {
 	if (gMovForward)
@@ -400,8 +418,9 @@ void movNextFrame() {
 		if (gMovFrame < gSettings.movFrames)
 		{
 			gMovFrame++;
-			gSettings.scaler = gSettings.scaler.mul(Quad(1.0 / gSettings.movZoomFact));
-			gSettings.hueScale *= gSettings.movHueScaleFact;
+			gSettings.scaler = Quad(gSettings.movZoomStart).mul(Quad(pow(gMovZoomFact, gMovFrame)));
+			gSettings.hueScale = gSettings.movHueScaleStart * pow(gMovHueFact, gMovFrame);
+			gSettings.thresh = gSettings.movThreshStart * pow(gMovThreshFact, gMovFrame);
 			gM.restart();
 			gM.iterate();
 		}
@@ -423,8 +442,9 @@ void movNextFrame() {
 		if (gMovFrame > 0)
 		{
 			gMovFrame--;
-			gSettings.scaler = gSettings.scaler.mul(Quad(gSettings.movZoomFact));
-			gSettings.hueScale *= 1.0 / gSettings.movHueScaleFact;
+			gSettings.scaler = Quad(gSettings.movZoomStart).mul(Quad(pow(gMovZoomFact, gMovFrame)));
+			gSettings.hueScale = gSettings.movHueScaleStart * pow(gMovHueFact, gMovFrame);
+			gSettings.thresh = gSettings.movThreshStart * pow(gMovThreshFact, gMovFrame);
 			gM.restart();
 			gM.iterate();
 		}
@@ -496,15 +516,50 @@ void imGuiFrame()
 		ImGui::SliderFloat("hueScale", &gSettings.hueScale, - 20.0f, 20.0f, "%.2f");
 		if (ImGui::CollapsingHeader("Movie"))
 		{
-			ImGui::Checkbox("Play", &gMovPlaying);
-			if (!gMovPlaying)
+			if (ImGui::Checkbox("Play", &gMovPlaying))
 			{
-				ImGui::SliderInt("Frames", &gSettings.movFrames, 1, 100);
-				ImGui::SliderFloat("Zoom factor", &gSettings.movZoomFact,1.0,2.0,"%.3f");
-				ImGui::SliderFloat("Hue range factor", &gSettings.movHueScaleFact, 1.0, 2.0, "%.3f");
-				ImGui::Checkbox("Loop", &gMovLoop);
-				ImGui::Checkbox("Bounce", &gMovBounce);
+				movReset();
 			}
+			ImGui::SliderInt("Frame", &gMovFrame, 0, gSettings.movFrames);
+			if (ImGui::Button("Set Start"))
+			{
+				gSettings.movZoomStart = gSettings.scaler.h;
+				gSettings.movHueScaleStart = gSettings.hueScale;
+				gSettings.movThreshStart = gSettings.thresh;
+				movReset();
+			}
+			ImGui::SameLine();
+			if (ImGui::Button("Set End"))
+			{
+				gSettings.movZoomEnd = gSettings.scaler.h;
+				gSettings.movHueScaleEnd = gSettings.hueScale;
+				gSettings.movThreshEnd = gSettings.thresh;
+				movReset();
+			}
+			ImGui::SliderInt("Frames", &gSettings.movFrames, 1, 100);
+			float z[2] = { 1.0/gSettings.movZoomStart, 1.0/gSettings.movZoomEnd };
+			if (ImGui::SliderFloat2("Zoom", z, 1, 1e30, "%e", ImGuiSliderFlags_Logarithmic))
+			{
+				gSettings.movZoomStart = 1.0/z[0];
+				gSettings.movZoomEnd = 1.0/z[1];
+				movReset();
+			}
+			float h[2] = { gSettings.movHueScaleStart, gSettings.movHueScaleEnd };
+			if (ImGui::SliderFloat2("Hue Scale", h, - 20.0f, 20.0f, "%.2f"))
+			{
+				gSettings.movZoomStart = h[0];
+				gSettings.movZoomEnd = h[1];
+				movReset();
+			}
+			float t[2] = { gSettings.movThreshStart, gSettings.movThreshEnd };
+			if (ImGui::SliderFloat2("Threshold", t, gSettings.minThresh, gSettings.maxThresh, "%d", ImGuiSliderFlags_Logarithmic))
+			{
+				gSettings.movThreshStart = t[0];
+				gSettings.movThreshEnd = t[1];
+				movReset();
+			}
+			ImGui::Checkbox("Loop", &gMovLoop);
+			ImGui::Checkbox("Bounce", &gMovBounce);
 		}
 
 		if (ImGui::CollapsingHeader("Advanced"))
