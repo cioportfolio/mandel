@@ -232,7 +232,7 @@ void handleKeys(SDL_Keysym key)
 		else
 		{
 			gSettings.scaler = gSettings.scaler.mul(Quad(1.0 + gSettings.moveFraction * (shiftKey ? 10 : 1)));
-			gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
+//			gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
 			gM.restart();
 			gM.iterate();
 			render();
@@ -253,7 +253,7 @@ void handleKeys(SDL_Keysym key)
 		else
 		{
 			gSettings.scaler = gSettings.scaler.mul(Quad(1.0 - gSettings.moveFraction * (shiftKey ? 10 : 1)));
-			gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
+//			gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
 			gM.restart();
 			gM.iterate();
 			render();
@@ -337,7 +337,7 @@ void handleMouse(SDL_Event e)
 			gSettings.centrer = gSettings.centrer.add(gSettings.scaler.mul(Quad(2.0 * x / gSettings.winWidth - 1.0)));
 			gSettings.centrei = gSettings.centrei.add(gSettings.scalei.mul(Quad(1.0 - 2.0 * y / gSettings.winHeight)));
 			gSettings.scaler = gSettings.scaler.mul(Quad(1.0 - dir * gSettings.zoomFraction));
-			gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
+//			gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
 			SDL_WarpMouseInWindow(gGLWindow, gSettings.winWidth / 2, gSettings.winHeight / 2);
 			gM.restart();
 			gM.iterate();
@@ -355,7 +355,7 @@ void handleMouse(SDL_Event e)
 			gSettings.centrer = gSettings.centrer.add(gSettings.scaler.mul(Quad(2.0 * x / gSettings.winWidth - 1.0)));
 			gSettings.centrei = gSettings.centrei.add(gSettings.scalei.mul(Quad(1.0 - 2.0 * y / gSettings.winHeight)));
 			gSettings.scaler = gSettings.scaler.mul(Quad(1.0 - gSettings.zoomFraction));
-			gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
+//			gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
 			SDL_WarpMouseInWindow(gGLWindow, gSettings.winWidth / 2, gSettings.winHeight / 2);
 			gM.restart();
 			gM.iterate();
@@ -366,7 +366,7 @@ void handleMouse(SDL_Event e)
 			gSettings.centrer = gSettings.centrer.add(gSettings.scaler.mul(Quad(2.0 * x / gSettings.winWidth - 1.0)));
 			gSettings.centrei = gSettings.centrei.add(gSettings.scalei.mul(Quad(1.0 - 2.0 * y / gSettings.winHeight)));
 			gSettings.scaler = gSettings.scaler.mul(Quad(1.0 + gSettings.zoomFraction));
-			gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
+//			gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
 			SDL_WarpMouseInWindow(gGLWindow, gSettings.winWidth / 2, gSettings.winHeight / 2);
 			gM.restart();
 			gM.iterate();
@@ -388,10 +388,63 @@ bool InputDouble2(const char* label, double v[2], const char* format)
 	return ImGui::InputScalarN(label, ImGuiDataType_Double, v, 2, NULL, NULL, format, ImGuiInputTextFlags_CharsScientific);
 }
 
+bool gMovPlaying = false;
+bool gMovForward = true;
+bool gMovLoop = true;
+bool gMovBounce = true;
+int gMovFrame = 0;
+
+void movNextFrame() {
+	if (gMovForward)
+	{
+		if (gMovFrame < gSettings.movFrames)
+		{
+			gMovFrame++;
+			gSettings.scaler = gSettings.scaler.mul(Quad(1.0 / gSettings.movZoomFact));
+			gSettings.hueScale *= gSettings.movHueScaleFact;
+			gM.restart();
+			gM.iterate();
+		}
+		else
+		{
+			if (gMovBounce)
+			{
+				gMovForward = false;
+				movNextFrame();
+			}
+			else
+			{
+				gMovPlaying = false;
+			}
+		}
+	}
+	else
+	{
+		if (gMovFrame > 0)
+		{
+			gMovFrame--;
+			gSettings.scaler = gSettings.scaler.mul(Quad(gSettings.movZoomFact));
+			gSettings.hueScale *= 1.0 / gSettings.movHueScaleFact;
+			gM.restart();
+			gM.iterate();
+		}
+		else
+		{
+			if (gMovLoop)
+			{
+				gMovForward = true;
+				movNextFrame();
+			}
+			else
+			{
+				gMovPlaying = false;
+			}
+		}
+	}
+}
+
 void imGuiFrame()
 {
-
-
 	// Start the Dear ImGui frame
 	ImGui_ImplOpenGL3_NewFrame();
 	ImGui_ImplSDL2_NewFrame();
@@ -431,7 +484,7 @@ void imGuiFrame()
 		if (ImGui::SliderFloat("Zoom", &z, 1, 1e30, "%e", ImGuiSliderFlags_Logarithmic))
 		{
 			gSettings.scaler = Quad(1.0/z);
-			gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
+//			gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
 			gM.restart();
 			gM.iterate();
 		}
@@ -441,7 +494,18 @@ void imGuiFrame()
 		ImGui::SliderFloat("Base Hue", &gSettings.baseHue, 0.0, 1.0, "%.3f");
 		ImGui::PopStyleColor(3);
 		ImGui::SliderFloat("hueScale", &gSettings.hueScale, - 20.0f, 20.0f, "%.2f");
-
+		if (ImGui::CollapsingHeader("Movie"))
+		{
+			ImGui::Checkbox("Play", &gMovPlaying);
+			if (!gMovPlaying)
+			{
+				ImGui::SliderInt("Frames", &gSettings.movFrames, 1, 100);
+				ImGui::SliderFloat("Zoom factor", &gSettings.movZoomFact,1.0,2.0,"%.3f");
+				ImGui::SliderFloat("Hue range factor", &gSettings.movHueScaleFact, 1.0, 2.0, "%.3f");
+				ImGui::Checkbox("Loop", &gMovLoop);
+				ImGui::Checkbox("Bounce", &gMovBounce);
+			}
+		}
 
 		if (ImGui::CollapsingHeader("Advanced"))
 		{
@@ -526,6 +590,9 @@ int main(int argc, char *args[])
 			if (gM.iterating())
 			{
 				gM.iterate();
+			}
+			else if (gMovPlaying) {
+				movNextFrame();
 			}
 			imGuiFrame();
 			render();

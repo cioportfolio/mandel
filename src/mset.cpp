@@ -30,7 +30,7 @@ bool Mset::restart()
 bool Mset::resize()
 {
     if (!gInitialised) return false;
-    gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight/ gSettings.winWidth));
+//    gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight/ gSettings.winWidth));
 
     glBindTexture(GL_TEXTURE_2D, gTexture[0]);
     checkGLError(__LINE__);
@@ -165,6 +165,7 @@ bool Mset::iterate()
         glUniform4d(gCentreLocation, gSettings.centrer.h, gSettings.centrer.l, gSettings.centrei.h, gSettings.centrei.l);
         checkGLError(__LINE__);
 
+        gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
         glUniform4d(gScaleLocation, gSettings.scaler.h, gSettings.scaler.l, gSettings.scalei.h, gSettings.scalei.l);
         checkGLError(__LINE__);
 
