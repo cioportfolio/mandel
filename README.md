@@ -1,0 +1,1 @@
+ffmpeg -r 1 -i C:\dev\mandel\test%04d.jpg -c:v libx264 -preset slow -crf 21 output.mp4
