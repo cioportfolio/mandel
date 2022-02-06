@@ -7,10 +7,10 @@
 #include <time.h>
 #include <sys/timeb.h>
 
-bool Mset::restart()
+bool Mset::restart(int r)
 {
     if (!gInitialised) return false;
-    gRes = gSettings.minRes;
+    gRes = r;
     gPrevRes = gRes*2;
     gBatch=0;
     gNoIndices=0;

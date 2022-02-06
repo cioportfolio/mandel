@@ -104,7 +104,7 @@ void Mset::saveFrame(const char *filename) {
     glPixelStorei(GL_PACK_ALIGNMENT, 1);
     glReadPixels(x, y, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
 
-    int saved = stbi_write_png(filename, width, height, 3, data, 0);
+    int saved = stbi_write_jpg(filename, width, height, 3, data, 0);
 
     free(data);
 }

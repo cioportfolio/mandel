@@ -396,6 +396,8 @@ int gMovFrame = 0;
 double gMovZoomFact = 1.0;
 double gMovHueFact = 1.0;
 double gMovThreshFact = 1.0;
+char gMovFile[50];
+bool gMovGen = false;
 
 double findBase(double start, double end, int steps)
 {
@@ -412,16 +414,22 @@ void movReset()
 	gMovThreshFact = findBase(gSettings.movThreshStart, gSettings.movThreshEnd, gSettings.movFrames);
 }
 
+void movSetFrame(int f)
+{
+	gSettings.scaler = Quad(gSettings.movZoomStart).mul(Quad(pow(gMovZoomFact, f)));
+	gSettings.hueScale = gSettings.movHueScaleStart * pow(gMovHueFact, f);
+	gSettings.thresh = gSettings.movThreshStart * pow(gMovThreshFact, f);
+}
+
 void movNextFrame() {
 	if (gMovForward)
 	{
 		if (gMovFrame < gSettings.movFrames)
 		{
 			gMovFrame++;
-			gSettings.scaler = Quad(gSettings.movZoomStart).mul(Quad(pow(gMovZoomFact, gMovFrame)));
-			gSettings.hueScale = gSettings.movHueScaleStart * pow(gMovHueFact, gMovFrame);
-			gSettings.thresh = gSettings.movThreshStart * pow(gMovThreshFact, gMovFrame);
-			gM.restart();
+			movSetFrame(gMovFrame);
+			int r = gMovGen ? 1 : gSettings.minRes;
+			gM.restart(r);
 			gM.iterate();
 		}
 		else
@@ -430,6 +438,10 @@ void movNextFrame() {
 			{
 				gMovForward = false;
 				movNextFrame();
+			}
+			else if (gMovGen)
+			{
+				gMovGen = false;
 			}
 			else
 			{
@@ -442,15 +454,18 @@ void movNextFrame() {
 		if (gMovFrame > 0)
 		{
 			gMovFrame--;
-			gSettings.scaler = Quad(gSettings.movZoomStart).mul(Quad(pow(gMovZoomFact, gMovFrame)));
-			gSettings.hueScale = gSettings.movHueScaleStart * pow(gMovHueFact, gMovFrame);
-			gSettings.thresh = gSettings.movThreshStart * pow(gMovThreshFact, gMovFrame);
-			gM.restart();
+			movSetFrame(gMovFrame);
+			int r = gMovGen ? 1 : gSettings.minRes;
+			gM.restart(r);
 			gM.iterate();
 		}
 		else
 		{
-			if (gMovLoop)
+			if (gMovGen)
+			{
+				gMovGen = false;
+			}
+			else if (gMovLoop)
 			{
 				gMovForward = true;
 				movNextFrame();
@@ -475,6 +490,7 @@ void imGuiFrame()
 		ImGui::ShowDemoWindow(&show_demo_window);
 
 	// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
+	if (!gMovGen)
 	{
 		ImGui::SetNextWindowCollapsed(true, 2);
 		ImGui::Begin("Controls", &showControls);
@@ -519,8 +535,17 @@ void imGuiFrame()
 			if (ImGui::Checkbox("Play", &gMovPlaying))
 			{
 				movReset();
+				movSetFrame(gMovFrame);
+				gM.restart();
+				gM.iterate();
 			}
-			ImGui::SliderInt("Frame", &gMovFrame, 0, gSettings.movFrames);
+			if (ImGui::SliderInt("Frame", &gMovFrame, 0, gSettings.movFrames))
+			{
+				movSetFrame(gMovFrame);
+				gM.restart();
+				gM.iterate();
+
+			}
 			if (ImGui::Button("Set Start"))
 			{
 				gSettings.movZoomStart = gSettings.scaler.h;
@@ -536,7 +561,7 @@ void imGuiFrame()
 				gSettings.movThreshEnd = gSettings.thresh;
 				movReset();
 			}
-			ImGui::SliderInt("Frames", &gSettings.movFrames, 1, 100);
+			ImGui::SliderInt("Frames", &gSettings.movFrames, 0, 1000-1);
 			float z[2] = { 1.0/gSettings.movZoomStart, 1.0/gSettings.movZoomEnd };
 			if (ImGui::SliderFloat2("Zoom", z, 1, 1e30, "%e", ImGuiSliderFlags_Logarithmic))
 			{
@@ -560,6 +585,17 @@ void imGuiFrame()
 			}
 			ImGui::Checkbox("Loop", &gMovLoop);
 			ImGui::Checkbox("Bounce", &gMovBounce);
+			ImGui::InputTextWithHint("Movie file", "Frames will be appendex with frame no", gMovFile, 50);
+			if (ImGui::Button("Generate frame files"))
+			{
+				gMovGen = true;
+				movReset();
+				gMovFrame = 0;
+				gMovForward = true;
+				movSetFrame(0);
+				gM.restart(1);
+				gM.iterate();
+			}
 		}
 
 		if (ImGui::CollapsingHeader("Advanced"))
@@ -600,8 +636,12 @@ void imGuiFrame()
 void render()
 {
 	gM.paint();
+
 	ImGui::Render();
-	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+	if (!gMovGen)
+	{
+		ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+	}
 	glFlush();
 	SDL_GL_SwapWindow(gGLWindow);
 }
@@ -646,11 +686,23 @@ int main(int argc, char *args[])
 			{
 				gM.iterate();
 			}
-			else if (gMovPlaying) {
-				movNextFrame();
+			if (!gMovGen)
+			{
+				imGuiFrame();
 			}
-			imGuiFrame();
 			render();
+			if (!gM.iterating())
+			{
+				if (gMovPlaying) {
+					movNextFrame();
+				}
+				else if (gMovGen) {
+					char frameFileName[55];
+					sprintf(frameFileName, "%s%04d.jpg", gMovFile, gMovFrame);
+					gM.saveFrame(frameFileName);
+					movNextFrame();
+				}
+			}
 
 			while (SDL_PollEvent(&e) != 0 && !quit)
 			{
@@ -659,24 +711,30 @@ int main(int argc, char *args[])
 				ImGuiIO& io = ImGui::GetIO();
 				if (e.type == SDL_QUIT)
 				{
-					quit = true;
+					if (gMovGen)
+						gMovGen = false;
+					else
+						quit = true;
 				}
 				else if (e.type == SDL_KEYDOWN)
 				{
 					if (e.key.keysym.sym == SDLK_q)
 					{
-						quit = true;
+						if (gMovGen)
+							gMovGen = false;
+						else
+							quit = true;
 					}
-					else
+					else if (!gMovGen)
 					{
 						handleKeys(e.key.keysym);
 					}
 				}
-				else if (e.type == SDL_WINDOWEVENT)
+				else if (e.type == SDL_WINDOWEVENT && !gMovGen)
 				{
 					handleWindow(e.window);
 				}
-				else if (!io.WantCaptureMouse)
+				else if (!io.WantCaptureMouse && !gMovGen)
 					if (e.type == SDL_MOUSEMOTION || e.type == SDL_MOUSEWHEEL || e.type == SDL_MOUSEBUTTONUP || e.type == SDL_MOUSEBUTTONDOWN)
 					{
 						handleMouse(e);

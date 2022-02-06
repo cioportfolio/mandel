@@ -2,6 +2,9 @@
 #define MSET_H_INCLUDED
 #define GLEW_STATIC
 #include <GL/glew.h>
+#include "settings.h"
+
+extern Settings gSettings;
 
 class Mset
 {
@@ -12,7 +15,7 @@ public:
     float frameDuration = 400;
     bool init();
     bool precision();
-    bool restart();
+    bool restart(int r = gSettings.minRes);
     bool resize();
     bool iterate();
     bool iterating();
