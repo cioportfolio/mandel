@@ -175,7 +175,7 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <None Include="..\terrain\.gitignore" />
+    <None Include=".gitignore" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\globals.cpp" />

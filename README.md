@@ -1,1 +1,1 @@
-ffmpeg -r 1 -i C:\dev\mandel\test%04d.jpg -c:v libx264 -preset slow -crf 21 output.mp4
+ffmpeg -r 25 -i C:\dev\mandel\movie\frame%04d.jpg -c:v libx264 -preset slow -crf 18 C:\dev\mandel\movie\zoom.mp4

@@ -396,7 +396,7 @@ int gMovFrame = 0;
 double gMovZoomFact = 1.0;
 double gMovHueFact = 1.0;
 double gMovThreshFact = 1.0;
-char gMovFile[50];
+char gMovFile[50] = "movie/frame";
 bool gMovGen = false;
 
 double findBase(double start, double end, int steps)
@@ -561,7 +561,10 @@ void imGuiFrame()
 				gSettings.movThreshEnd = gSettings.thresh;
 				movReset();
 			}
-			ImGui::SliderInt("Frames", &gSettings.movFrames, 0, 1000-1);
+			if (ImGui::SliderInt("Frames", &gSettings.movFrames, 1, 1000 - 1))
+			{
+				movReset();
+			}
 			float z[2] = { 1.0/gSettings.movZoomStart, 1.0/gSettings.movZoomEnd };
 			if (ImGui::SliderFloat2("Zoom", z, 1, 1e30, "%e", ImGuiSliderFlags_Logarithmic))
 			{
