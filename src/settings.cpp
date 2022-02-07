@@ -85,7 +85,7 @@ bool Settings::load (const char* filename)
     if (itr != settingsDoc.MemberEnd())
         hueScale = itr->value.GetDouble();
 
-    itr = settingsDoc.FindMember("winwidth");
+/*    itr = settingsDoc.FindMember("winwidth");
     if (itr != settingsDoc.MemberEnd())
     {
         winWidth = itr->value.GetInt();
@@ -97,7 +97,7 @@ bool Settings::load (const char* filename)
     {
         winHeight = itr->value.GetInt();
 //        scalei = scaler.mul(Quad((double)winHeight/ winWidth));
-    }
+    } */
 
     itr = settingsDoc.FindMember("r");
     if (itr != settingsDoc.MemberEnd())
@@ -182,7 +182,7 @@ bool Settings::save (const char* filename)
     fs<<"\"huefraction\": "<<hueFraction<<","<<std::endl;
     fs<<"\"huestep\": "<<hueStep<<","<<std::endl;
     fs << "\"huescale\": " << hueScale << "," << std::endl;
-    fs << "\"basehue\": " << baseHue << std::endl;
+    fs << "\"basehue\": " << baseHue << "," << std::endl;
     fs<<"\"winwidth\": "<<winWidth<<","<<std::endl;
     fs<<"\"winheight\": "<<winHeight<<","<<std::endl;
     fs<<"\"lowshader\": \""<<lowShader<<"\","<<std::endl;
@@ -191,11 +191,11 @@ bool Settings::save (const char* filename)
     fs<<"\"i\": "<<centrei.h<<","<<std::endl;
     fs<<"\"scale\": "<<scaler.h<<","<<std::endl;
     fs << "\"movzoomstart\": " << movZoomStart << "," << std::endl;
-    fs << "\"movzoomend\": " << movZoomEnd << std::endl;
+    fs << "\"movzoomend\": " << movZoomEnd << "," << std::endl;
     fs << "\"movframes\": " << movFrames << "," << std::endl;
-    fs << "\"movhuescalestart\": " << movHueScaleStart << std::endl;
+    fs << "\"movhuescalestart\": " << movHueScaleStart << "," << std::endl;
     fs << "\"movhuescaleend\": " << movHueScaleEnd << "," << std::endl;
-    fs << "\"movthreshstart\": " << movThreshStart << std::endl;
+    fs << "\"movthreshstart\": " << movThreshStart << "," << std::endl;
     fs << "\"movthreshend\": " << movThreshEnd << std::endl;
     fs<<"}"<<std::endl;
     fs.close();

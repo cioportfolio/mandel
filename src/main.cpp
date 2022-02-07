@@ -398,6 +398,7 @@ double gMovHueFact = 1.0;
 double gMovThreshFact = 1.0;
 char gMovFile[50] = "movie/frame";
 bool gMovGen = false;
+char gSettingsFile[50] = "res/newsettings.json";
 
 double findBase(double start, double end, int steps)
 {
@@ -530,6 +531,20 @@ void imGuiFrame()
 		ImGui::SliderFloat("Base Hue", &gSettings.baseHue, 0.0, 1.0, "%.3f");
 		ImGui::PopStyleColor(3);
 		ImGui::SliderFloat("hueScale", &gSettings.hueScale, - 20.0f, 20.0f, "%.2f");
+
+		ImGui::InputText("Settings file", gSettingsFile, 50);
+		if (ImGui::Button("Save"))
+		{
+			gSettings.save(gSettingsFile);
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Load"))
+		{
+			gSettings.load(gSettingsFile);
+			gM.restart();
+			gM.iterate();
+		}
+
 		if (ImGui::CollapsingHeader("Movie"))
 		{
 			if (ImGui::Checkbox("Play", &gMovPlaying))
