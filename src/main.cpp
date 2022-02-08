@@ -148,7 +148,7 @@ bool handleWindow(SDL_WindowEvent we)
 		gM.iterate();
 		render();
 
-		printf("Canvas Size %d / %d", w, h);
+//		printf("Canvas Size %d / %d", w, h);
 
 		return true;
 	}
