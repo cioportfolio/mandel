@@ -44,11 +44,11 @@ bool Mset::resize()
     glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, gSettings.winWidth, gSettings.winHeight, 0,GL_RED_INTEGER, GL_UNSIGNED_BYTE, 0);
     checkGLError(__LINE__);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, gFramebuffer);
-    glViewport(0,0,gSettings.winWidth,gSettings.winHeight);
+/*    glBindFramebuffer(GL_FRAMEBUFFER, gFramebuffer);
+    glViewport(0,0,gSettings.winWidth/2,gSettings.winHeight/2);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, gSettings.winWidth, gSettings.winHeight);
+    glViewport(0, 0, gSettings.winWidth, gSettings.winHeight); */
 
     buildWinData();
 
@@ -190,7 +190,8 @@ bool Mset::iterate()
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             printf("Framebuffer not complete at line %i\n",__LINE__);
 
-//        glViewport(0,0,gSettings.winWidth,gSettings.winHeight);
+        glViewport(0,0,gSettings.winWidth,gSettings.winHeight);
+        checkGLError(__LINE__);
 
         glDrawElements(GL_POINTS, noElements, GL_UNSIGNED_INT, (void *)(gBatch * sizeof(GLuint)));
         checkGLError(__LINE__);

@@ -88,7 +88,7 @@ bool Mset::initGL()
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) return false;
 
 //    glBindFramebuffer(GL_FRAMEBUFFER, gFramebuffer);
-    glViewport(0,0,gSettings.winWidth, gSettings.winHeight);
+//    glViewport(0,0,gSettings.winWidth/2, gSettings.winHeight/2);
 
     glGenBuffers(1, &gScreenBO);
     checkGLError(__LINE__);
@@ -99,8 +99,8 @@ bool Mset::initGL()
     glBufferData(GL_ARRAY_BUFFER, sizeof(gScreenBD), gScreenBD, GL_STATIC_DRAW);
     checkGLError(__LINE__);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0,0,gSettings.winWidth, gSettings.winHeight);
+//    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+//    glViewport(0,0,gSettings.winWidth, gSettings.winHeight);
 
     glGenVertexArrays(1, &gScreenVA);
     checkGLError(__LINE__);
