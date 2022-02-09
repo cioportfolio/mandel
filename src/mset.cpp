@@ -137,8 +137,8 @@ bool Mset::iterate()
         glUseProgram(gProgramID[gProgram]);
         checkGLError(__LINE__);
 
-        glEnableVertexAttribArray(0);
-        checkGLError(__LINE__);
+/*        glEnableVertexAttribArray(0);
+        checkGLError(__LINE__); 
 
         glBindBuffer(GL_ARRAY_BUFFER, gVBO);
         checkGLError(__LINE__);
@@ -151,7 +151,7 @@ bool Mset::iterate()
             0,		  // stride
             (void *)0 // array buffer offset
         );
-        checkGLError(__LINE__);
+        checkGLError(__LINE__); */
 
         glActiveTexture(GL_TEXTURE0);
         checkGLError(__LINE__);
@@ -159,8 +159,8 @@ bool Mset::iterate()
         glBindTexture(GL_TEXTURE_2D, gTexture[1-gOutTexture]);
         checkGLError(__LINE__);
 
-        glUniform1i(gInTexLocation, 0);
-        checkGLError(__LINE__);
+//        glUniform1i(gInTexLocation, 0);
+//        checkGLError(__LINE__);
 
         glUniform4d(gCentreLocation, gSettings.centrer.h, gSettings.centrer.l, gSettings.centrei.h, gSettings.centrei.l);
         checkGLError(__LINE__);
@@ -184,19 +184,19 @@ bool Mset::iterate()
         glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, gTexture[gOutTexture], 0);
         checkGLError(__LINE__);
 
-        glDrawBuffers(2, gDrawBuffers);
-        checkGLError(__LINE__);
+//        glDrawBuffers(2, gDrawBuffers);
+//        checkGLError(__LINE__);
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             printf("Framebuffer not complete at line %i\n",__LINE__);
 
-        glViewport(0,0,gSettings.winWidth,gSettings.winHeight);
+//        glViewport(0,0,gSettings.winWidth,gSettings.winHeight);
 
         glDrawElements(GL_POINTS, noElements, GL_UNSIGNED_INT, (void *)(gBatch * sizeof(GLuint)));
         checkGLError(__LINE__);
 
-        glDisableVertexAttribArray(0);
-        checkGLError(__LINE__);
+//        glDisableVertexAttribArray(0);
+//        checkGLError(__LINE__);
         glFinish();
 
         gBatch += gIndStep;
@@ -227,7 +227,7 @@ void Mset::paint()
     glUseProgram(gScreenPID);
     checkGLError(__LINE__);
 
-    glEnableVertexAttribArray(0);
+/*    glEnableVertexAttribArray(0);
     checkGLError(__LINE__);
 
     glBindBuffer(GL_ARRAY_BUFFER, gScreenBO);
@@ -241,7 +241,7 @@ void Mset::paint()
         0,		  // stride
         (void *)0 // array buffer offset
     );
-    checkGLError(__LINE__);
+    checkGLError(__LINE__); */
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     checkGLError(__LINE__);
@@ -255,8 +255,8 @@ void Mset::paint()
     glBindTexture(GL_TEXTURE_2D, gTexture[gOutTexture]);
     checkGLError(__LINE__);
 
-    glUniform1i(gTextureLocation, 0);
-    checkGLError(__LINE__);
+//    glUniform1i(gTextureLocation, 0);
+//    checkGLError(__LINE__);
 
     glUniform4i(gScrParamLocation, gSettings.thresh, gRes, gSettings.winWidth, gSettings.winHeight);
     checkGLError(__LINE__);
@@ -268,8 +268,8 @@ void Mset::paint()
     glDrawArrays(GL_TRIANGLES, 0, 2*3); // 12*3 indices starting at 0 -> 12 triangles -> 6 squagRes
     checkGLError(__LINE__);
 
-    glDisableVertexAttribArray(0);
-    checkGLError(__LINE__);
+//    glDisableVertexAttribArray(0);
+//    checkGLError(__LINE__);
 }
 
 bool Mset::buildWinData()

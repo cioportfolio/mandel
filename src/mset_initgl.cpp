@@ -6,11 +6,6 @@ bool Mset::initGL()
     //Success flag
     bool success = true;
 
-    glGenVertexArrays(1, &gTextureVA);
-    checkGLError(__LINE__);
-
-    glBindVertexArray(gTextureVA);
-    checkGLError(__LINE__);
 
     // Generate 1 buffer, put the resulting identifier in vertexbuffer
     glGenBuffers(1, &gVBO);
@@ -26,6 +21,28 @@ bool Mset::initGL()
     checkGLError(__LINE__);
 
     glGenTextures(2, gTexture);
+    checkGLError(__LINE__);
+
+    glGenVertexArrays(1, &gTextureVA);
+    checkGLError(__LINE__);
+
+    glBindVertexArray(gTextureVA);
+    checkGLError(__LINE__);
+
+    glEnableVertexAttribArray(0);
+    checkGLError(__LINE__);
+
+    glBindBuffer(GL_ARRAY_BUFFER, gVBO);
+    checkGLError(__LINE__);
+
+    glVertexAttribIPointer(
+        0,		  // attribute 0. No particular reason for 0, but must match the layout in the shader.
+        2,		  // size
+        GL_INT, // type
+//				GL_FALSE, // normalized?
+0,		  // stride
+(void*)0 // array buffer offset
+);
     checkGLError(__LINE__);
 
     glBindTexture(GL_TEXTURE_2D, gTexture[0]);
@@ -59,25 +76,19 @@ bool Mset::initGL()
     checkGLError(__LINE__);
 
     glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, gTexture[0], 0);
-    checkGLError(__LINE__);
+   checkGLError(__LINE__);
 
-    glDrawBuffer(GL_COLOR_ATTACHMENT0);
-    glClearBufferiv(GL_COLOR, 0, gTexEmpty);
-    checkGLError(__LINE__);
+//    glDrawBuffer(GL_COLOR_ATTACHMENT0);
+//    glClearBufferiv(GL_COLOR, 0, gTexEmpty);
+//    checkGLError(__LINE__);
 
     glDrawBuffers(2, gDrawBuffers);
     checkGLError(__LINE__);
 
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) return false;
 
-    glBindFramebuffer(GL_FRAMEBUFFER, gFramebuffer);
+//    glBindFramebuffer(GL_FRAMEBUFFER, gFramebuffer);
     glViewport(0,0,gSettings.winWidth, gSettings.winHeight);
-
-    glGenVertexArrays(1, &gScreenVA);
-    checkGLError(__LINE__);
-
-    glBindVertexArray(gScreenVA);
-    checkGLError(__LINE__);
 
     glGenBuffers(1, &gScreenBO);
     checkGLError(__LINE__);
@@ -90,6 +101,12 @@ bool Mset::initGL()
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0,0,gSettings.winWidth, gSettings.winHeight);
+
+    glGenVertexArrays(1, &gScreenVA);
+    checkGLError(__LINE__);
+
+    glBindVertexArray(gScreenVA);
+    checkGLError(__LINE__);
 
     glEnableVertexAttribArray(0);
     checkGLError(__LINE__);
@@ -111,6 +128,9 @@ bool Mset::initGL()
 
     gScreenPID = LoadShaders(false, "res/shaders/passthroughshader.txt", "res/shaders/textureshader.txt");
 
+    glUseProgram(gScreenPID);
+    checkGLError(__LINE__);
+
     gTextureLocation = glGetUniformLocation(gScreenPID, "tex");
     checkGLError(__LINE__);
     if (gTextureLocation == -1)
@@ -119,6 +139,9 @@ bool Mset::initGL()
         success = false;
         return success;
     }
+    checkGLError(__LINE__);
+
+    glUniform1i(gTextureLocation, 0);
     checkGLError(__LINE__);
 
     gScrParamLocation = glGetUniformLocation(gScreenPID, "params");
@@ -180,6 +203,18 @@ bool Mset::initGL()
         success = false;
         return success;
     }
+
+    glUseProgram(gProgramID[0]);
+    checkGLError(__LINE__);
+
+    glUniform1i(gInTexLocation, 0);
+    checkGLError(__LINE__);
+
+    glUseProgram(gProgramID[1]);
+    checkGLError(__LINE__);
+
+    glUniform1i(gInTexLocation, 0);
+    checkGLError(__LINE__);
 
     return buildWinData();
 }
