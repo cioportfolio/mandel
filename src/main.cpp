@@ -20,8 +20,6 @@
 
 bool handleWindow(SDL_WindowEvent w);
 
-bool buildWinData();
-
 //Input handler
 bool handleKeys(unsigned char key, int x, int y);
 
@@ -143,7 +141,6 @@ bool handleWindow(SDL_WindowEvent we)
 			return false;
 		gSettings.winWidth = w;
 		gSettings.winHeight = h;
-		gM.resize();
 		gM.restart();
 		gM.iterate();
 		render();
@@ -253,20 +250,11 @@ void handleKeys(SDL_Keysym key)
 		else
 		{
 			gSettings.scaler = gSettings.scaler.mul(Quad(1.0 - gSettings.moveFraction * (shiftKey ? 10 : 1)));
-//			gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
 			gM.restart();
 			gM.iterate();
 			render();
 		}
 		break;
-//	case SDLK_ESCAPE:
-//		gAlert(wxT("Press OK to continue or CANCEL to exit"));
-//		break;
-	case SDLK_TAB:
-		gM.precision();
-		gM.restart();
-		gM.iterate();
-		render();
 	}
 }
 
@@ -497,7 +485,7 @@ void imGuiFrame()
 		ImGui::Begin("Controls", &showControls);
 		if (gM.iterating())
 		{
-			ImGui::Text("%i Bit. Resolution %i %i %% Batch duration %i", (gM.gProgram == 1) ? 128 : 64, gM.gRes, gM.gProgress, (int)gM.frameDuration);
+			ImGui::Text("%i Bit. Resolution %i %i %% Batch duration %i", (gM.gPrecision == 1) ? 128 : 64, gM.gRes, gM.gProgress, (int)gM.frameDuration);
 		}
 		else
 		{
@@ -636,9 +624,8 @@ void imGuiFrame()
 			if (ImGui::InputFloat("Quad zoom level", &gSettings.quadZoom, 0, 0, "%e"))
 			{
 				bool highPrec = (gSettings.scaler.h < gSettings.quadZoom);
-				if (highPrec != (gM.gProgram == 1))
+				if (highPrec != (gM.gPrecision == 1))
 				{
-					gM.precision();
 					gM.restart();
 					gM.iterate();
 				}

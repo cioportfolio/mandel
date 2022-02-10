@@ -26,10 +26,15 @@ void Mset::close()
 {
     if (!gInitialised) return;
     //Deallocate program
-    glDeleteProgram(gProgramID[0]);
-    checkGLError(__LINE__);
-    glDeleteProgram(gProgramID[1]);
-    checkGLError(__LINE__);
+    for (int i = 0; i < 2; i++)
+    {
+        GL_CALL(glDeleteProgram(gTexturePID[i]));
+    }
+    GL_CALL(glDeleteProgram(gScreenPID));
+    GL_CALL(glDeleteVertexArrays(1, &gGenericVertexArray));
+    GL_CALL(glDeleteBuffers(1, &gVertexBufferObject));
+    GL_CALL(glDeleteTextures(2, gTexture));
+    GL_CALL(glDeleteFramebuffers(1, &gTextureFrameBuffer));
 }
 
 void Mset::checkGLError(int l)
@@ -42,54 +47,9 @@ void Mset::checkGLError(int l)
     }
 }
 
-bool Mset::precision()
-{
-    gProgram = 1-gProgram;
-
-    gCentreLocation = glGetUniformLocation(gProgramID[gProgram], "centre");
-    checkGLError(__LINE__);
-    if (gCentreLocation == -1)
-    {
-        gLog("Failed to get centre location");
-        return false;
-    }
-
-    gScaleLocation = glGetUniformLocation(gProgramID[gProgram], "scale");
-    checkGLError(__LINE__);
-    if (gScaleLocation == -1)
-    {
-        gLog("Failed to get scale locations");
-        return false;
-    }
-
-    gParamsLocation = glGetUniformLocation(gProgramID[gProgram], "params");
-    checkGLError(__LINE__);
-    if (gParamsLocation == -1)
-    {
-        gLog("Failed to get params locations");
-        return false;
-    }
-
-    gInTexLocation = glGetUniformLocation(gProgramID[gProgram], "inTex");
-    checkGLError(__LINE__);
-    if (gInTexLocation == -1)
-    {
-        gLog("Failed to get inTex location");
-        return false;
-    }
-    checkGLError(__LINE__);
-
-/*    if (gProgram)
-        gLog("Switched to Quad(128bit) precision\n");
-    else
-        gLog("Switched to Double(64bit) precision\n");*/
-
-    return true;
-}
-
 void Mset::saveFrame(const char *filename) {
     GLint viewport[4];
-    glGetIntegerv(GL_VIEWPORT, viewport);
+    GL_CALL(glGetIntegerv(GL_VIEWPORT, viewport));
 
     int x = viewport[0];
     int y = viewport[1];
@@ -101,8 +61,8 @@ void Mset::saveFrame(const char *filename) {
     if (!data)
         gLog("No screen data to save");
 
-    glPixelStorei(GL_PACK_ALIGNMENT, 1);
-    glReadPixels(x, y, width, height, GL_RGB, GL_UNSIGNED_BYTE, data);
+    GL_CALL(glPixelStorei(GL_PACK_ALIGNMENT, 1));
+    GL_CALL(glReadPixels(x, y, width, height, GL_RGB, GL_UNSIGNED_BYTE, data));
 
     int saved = stbi_write_jpg(filename, width, height, 3, data, 0);
 

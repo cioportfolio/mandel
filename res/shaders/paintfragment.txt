@@ -18,13 +18,6 @@ int height = params.w;
 
 uniform vec2 colmap;
 
-vec3 hsv2rgb(vec3 c)
-{
-    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
-    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
-}
-
 vec3 rainbow(float c)
 {
     float seg = floor(fract(c)*8);
@@ -41,21 +34,20 @@ vec3 rainbow(float c)
 
 vec3 iter2col(int iter) {
 	float r = log((float(iter)))/log((float(maxI)));
-//	return hsv2rgb(vec3(colmap.x - r*colmap.y,1.0,1.0));
     return rainbow(colmap.x + r*colmap.y);
 }
 
 
 
 void main(){
-    ivec2 UV = ivec2((fUV.x/2.0+0.5)*width, (fUV.y/2.0+0.5)*height);
+    ivec2 UV = ivec2(gl_FragCoord.x/res, gl_FragCoord.y/res);
 
     // Output color = color of the texture at the specified UV
     int itCount = texelFetch(tex, UV, 0).r;
-    if (itCount < 0) itCount = texelFetch(tex, ivec2(UV.x/res*res, UV.y/res*res), 0).r;
-    if (itCount < 0) itCount = texelFetch(tex, ivec2(UV.x/res/2*res*2, UV.y/res/2*res*2), 0).r;
-    if (itCount < 1)
-        color = vec3(0.0,0.0,0.0);
-    else
-        color = iter2col(itCount);
+    vec3 c = vec3(0.5,0.0,0.5);
+    if (itCount == 0)
+        c = vec3(0.0,0.0, 0.0);
+    if (itCount >= 1)
+        c = iter2col(itCount);
+    color = c;
 }

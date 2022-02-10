@@ -43,8 +43,7 @@ GLuint Mset::LoadShaders(bool feedback, const char *vertex_file_path, const char
 	int InfoLogLength;
 
 	// Compile Vertex Shader
-	//gAlert(wxString::Format(wxT("Compiling shader : %s"), vertex_file_path));
-	//gLog(wxString::Format("Compiling shader : %s", vertex_file_path));
+	printf("Compiling vertex shader : %s\n", vertex_file_path);
 	char const *VertexSourcePointer = VertexShaderCode.c_str();
 	glShaderSource(VertexShaderID, 1, &VertexSourcePointer, NULL);
 	glCompileShader(VertexShaderID);
@@ -60,7 +59,7 @@ GLuint Mset::LoadShaders(bool feedback, const char *vertex_file_path, const char
 	}
 
 	// Compile Fragment Shader
-	printf("Compiling shader : %s\n", fragment_file_path);
+	printf("Compiling fagment shader : %s\n", fragment_file_path);
 	char const *FragmentSourcePointer = FragmentShaderCode.c_str();
 	glShaderSource(FragmentShaderID, 1, &FragmentSourcePointer, NULL);
 	glCompileShader(FragmentShaderID);

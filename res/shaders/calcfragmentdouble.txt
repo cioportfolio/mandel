@@ -1,0 +1,52 @@
+#version 410 core
+#pragma optimize(off)
+#pragma debug(on)
+
+in vec2 fUV;
+
+out int itCount;
+
+uniform isampler2D inTex;
+
+uniform dvec4 centre;
+uniform dvec4 scale;
+uniform ivec4 params;
+
+int maxI = params.x;
+int width = params.y;
+int height = params.z;
+int res = params.w;
+
+dvec2 sqr(in dvec2 z){
+	return dvec2(z.x * z.x - z.y * z.y, 2 * z.x * z.y);
+}
+
+double magpow2(in dvec2 z){
+	return z.x * z.x + z.y * z.y;
+}
+
+void main()
+{
+	int ic = -1;
+	if (mod(gl_FragCoord.x, 2.0) == 0.0 && mod(gl_FragCoord.y, 2.0) == 0.0)
+	{
+		ic = texelFetch( inTex, ivec2(floor(gl_FragCoord.x)/2, floor(gl_FragCoord.y)/2), 0).r;
+	}
+	else
+	{
+		dvec2 c = dvec2(fUV.x*scale.x+centre.x,fUV.y*scale.z+centre.z);
+		dvec2 z = dvec2(0,0);
+
+		ic = 0;
+		for (int i=0;i<maxI;i++)
+		{
+			if (magpow2(z) > 4)
+			{
+				ic = i;	
+				break;
+			}
+			z = sqr(z)+c;
+		}
+	}
+	itCount = ic;
+}
