@@ -24,6 +24,8 @@ public:
     void saveFrame(const char* f);
     GLuint LoadShaders(bool feedback, const char* vertex_file_path, const char* fragment_file_path);
     int gPrecision = 0;
+    int gNoBatches = 4;
+
 private:
     void checkGLError(int l);
     bool initGL();
@@ -54,10 +56,10 @@ private:
     int gTargetTexture = 0;
     GLuint gTexture[2] = { 0,0 };
     int gPrevRes = 0;
-    int gNoIndices = 0;
+
     bool gInitialised = false;
     int gBatch = 0;
-    int gIndStep = 0;
+//    int gIndStep = 0;
     GLenum gTextureDrawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
     GLint gTexEmpty[4] = { -1,-1,-1,-1 };
 };

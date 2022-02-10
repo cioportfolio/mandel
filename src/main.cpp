@@ -492,6 +492,11 @@ void imGuiFrame()
 			ImGui::Text("Completed fractal");
 		}
 		ImGui::Text("Window %i x %i", gSettings.winWidth, gSettings.winHeight);
+/*		if (ImGui::SliderInt("Batches", &gM.gNoBatches, 1, 1000))
+		{
+			gM.restart();
+			gM.iterate();
+		} */
 		if (ImGui::SliderInt("Threshold", &gSettings.thresh, gSettings.minThresh, gSettings.maxThresh, "%d", ImGuiSliderFlags_Logarithmic))
 		{
 			gM.restart();
@@ -578,8 +583,8 @@ void imGuiFrame()
 			float h[2] = { gSettings.movHueScaleStart, gSettings.movHueScaleEnd };
 			if (ImGui::SliderFloat2("Hue Scale", h, - 20.0f, 20.0f, "%.2f"))
 			{
-				gSettings.movZoomStart = h[0];
-				gSettings.movZoomEnd = h[1];
+				gSettings.movHueScaleStart = h[0];
+				gSettings.movHueScaleEnd = h[1];
 				movReset();
 			}
 			float t[2] = { gSettings.movThreshStart, gSettings.movThreshEnd };
@@ -633,7 +638,6 @@ void imGuiFrame()
 			ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
 		}
 		ImGui::End();
-
 	}
 }
 

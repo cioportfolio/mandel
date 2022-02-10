@@ -12,8 +12,9 @@ bool Mset::restart(int r)
     if (!gInitialised) return false;
     gRes = r;
     gPrevRes = gRes*2;
-//    gBatch=0;
-//    gNoIndices=0;
+    gBatch=0;
+    tuneBatch();
+
     GL_CALL(glBindTexture(GL_TEXTURE_2D, gTexture[gTargetTexture]));
     GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, gSettings.winWidth / gPrevRes, gSettings.winHeight / gPrevRes, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, 0));
     GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, gTextureFrameBuffer));
@@ -41,39 +42,32 @@ bool Mset::restart(int r)
 
 bool Mset::iterating()
 {
-    return (gPrevRes > 1 || gBatch < gNoIndices);
+    return (gPrevRes > 1 || gBatch < gNoBatches);
 }
 
 void Mset::tuneBatch()
 {
-        gIndStep = gNoIndices;
-        long long total_iter = (long long) gNoIndices * gSettings.thresh * (1 + (gSettings.highCapFactor - 1)*gPrecision);
-        long long target_iter = gSettings.frameCap * (gSettings.durationTarget / frameDuration);
-        while (total_iter > target_iter && gIndStep > 1)
-        {
-            total_iter /= 2;
-            gIndStep /= 2;
-        }
+        long long workEst = (long long) gSettings.winWidth / gRes * gSettings.winHeight / gRes * gSettings.thresh * (1 + (gSettings.highCapFactor - 1)*gPrecision);
+        long long capacityEst = gSettings.frameCap * gSettings.durationTarget / frameDuration;
+        gNoBatches = workEst < capacityEst * 2 ? 1 : workEst / capacityEst;
 }
 
 bool Mset::iterate()
 {
     if (!gInitialised) return false;
-    gTargetTexture = 1 - gTargetTexture;
 
-//    if (gBatch >= gNoIndices && gRes != gPrevRes)
-//    {
-//        gNoIndices = pointWidth * pointHeight;
-//        tuneBatch();
-//        gBatch=0;
-//    }
-//    if (gBatch < gNoIndices)
+
+    if (gBatch >= gNoBatches && gRes != gPrevRes)
+    {
+        gTargetTexture = 1 - gTargetTexture;
+        tuneBatch();
+        gBatch=0;
+    }
+    if (gBatch < gNoBatches)
     {
         struct _timeb startTime, endTime;
         _ftime(&startTime);
-//        gProgress = (int)((100.0 * gBatch / gNoIndices));
-//        int noElements = gIndStep;
-//        if (gBatch + noElements >= gNoIndices) noElements = gNoIndices - gBatch;
+        gProgress = (int)((100.0 * gBatch / gNoBatches));
         GL_CALL(glBindTexture(GL_TEXTURE_2D, gTexture[gTargetTexture]));
         GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, gSettings.winWidth / gRes, gSettings.winHeight / gRes, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, 0));
         GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, gTextureFrameBuffer));
@@ -95,18 +89,35 @@ bool Mset::iterate()
 
         GL_CALL(glViewport(0,0,gSettings.winWidth/gRes,gSettings.winHeight/gRes));
 
-        GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 6));
-        GL_CALL(glFinish());
-
-//        gBatch += gIndStep;
+        GL_CALL(glEnable(GL_SCISSOR_TEST));
+        int xBatchSize = gSettings.winWidth/gRes < 2*gNoBatches ? 1: gSettings.winWidth / gRes / gNoBatches;
+        int xBatches = gSettings.winWidth / gRes / xBatchSize;
+        int xBatchStart = gBatch * xBatchSize;
+        int xBatchEnd = gBatch * xBatchSize + xBatchSize;
+        if (xBatchEnd <= gSettings.winWidth / gRes)
+        {
+            if (xBatchEnd > gSettings.winWidth / gRes)
+            {
+                xBatchEnd = gSettings.winWidth / gRes;
+                gBatch = gNoBatches;
+            }
+            GL_CALL(glScissor(xBatchStart, 0, xBatchEnd, gSettings.winHeight / gRes));
+            GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 6));
+            GL_CALL(glFinish());
+            GL_CALL(glDisable(GL_SCISSOR_TEST));
+        }
+        else
+        {
+            gBatch = gNoBatches;
+        }
+        gBatch++;
         _ftime(&endTime);
         endTime.time -= startTime.time;
         float newDuration = 1000.0 * endTime.time + endTime.millitm - startTime.millitm;
         frameDuration = (1.0 - gSettings.durationFilter)*frameDuration + gSettings.durationFilter * newDuration;
 //        tuneBatch();
-//        if (gBatch >= gNoIndices)
+        if (gBatch >= gNoBatches)
         {
-            gNoIndices=0;
             gPrevRes = gRes;
             if (gRes > 1)
                 gRes /= 2;
@@ -126,7 +137,9 @@ void Mset::paint()
     GL_CALL(glBindTexture(GL_TEXTURE_2D, gTexture[gTargetTexture]));
 
     GL_CALL(glUseProgram(gScreenPID));
-    GL_CALL(glUniform4i(gScrParamLocation, gSettings.thresh, gPrevRes, gSettings.winWidth, gSettings.winHeight));
+
+    int paintRes = gBatch < gNoBatches ? gRes : gPrevRes;
+    GL_CALL(glUniform4i(gScrParamLocation, gSettings.thresh, paintRes, gSettings.winWidth, gSettings.winHeight));
     GL_CALL(glUniform2f(gColMapLocation, gSettings.baseHue, gSettings.hueScale));
     
     GL_CALL(glViewport(0, 0, gSettings.winWidth, gSettings.winHeight));
