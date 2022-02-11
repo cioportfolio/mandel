@@ -1,0 +1,16 @@
+#version 410 core
+
+in vec2 fUV;
+
+out int itCount;
+
+uniform isampler2D inTex;
+
+void main()
+{
+	ivec2 point = ivec2(floor(gl_FragCoord.x), floor(gl_FragCoord.y));
+	ivec2 parent = point/2;
+	int ic = texelFetch( inTex, parent, 0).r;
+
+	itCount = ic;
+}

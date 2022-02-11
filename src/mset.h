@@ -42,6 +42,7 @@ private:
     GLuint gGenericVertexArray = 0;
     GLuint gTexturePID[2] = { 0,0 };
     GLuint gScreenPID = 0;
+    GLuint gTexPassPID = 0;
     GLint gCentreLocation[2] = { -1,-1 };
     GLint gScaleLocation[2] = { -1,-1 };
     GLint gColMapLocation = -1;
@@ -49,6 +50,7 @@ private:
     GLint gScrParamLocation = -1;
     GLint gPaintTexLocation = -1;
     GLint gCalcTexLocation[2] = {-1,-1};
+//    GLint gCalcRectLocation[2] = { -1,-1 };
     GLuint gVertexBufferObject = 0;
     GLuint gTextureFrameBuffer = 0;
     int gTargetTexture = 0;

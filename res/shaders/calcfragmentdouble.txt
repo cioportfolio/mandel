@@ -1,6 +1,4 @@
 #version 410 core
-#pragma optimize(off)
-#pragma debug(on)
 
 in vec2 fUV;
 
@@ -27,7 +25,8 @@ double magpow2(in dvec2 z){
 
 void main()
 {
-	ivec2 parent = ivec2(floor(gl_FragCoord.x)/2, floor(gl_FragCoord.y)/2);
+	ivec2 point = ivec2(floor(gl_FragCoord.x), floor(gl_FragCoord.y));
+	ivec2 parent = point/2;
 	int ic = texelFetch( inTex, parent, 0).r;
 
 	if (mod(gl_FragCoord.x, 2.0) != 0.0 || mod(gl_FragCoord.y, 2.0) != 0.0 || ic == -1)

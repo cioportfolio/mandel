@@ -52,17 +52,32 @@ bool Mset::iterate()
         gTargetTexture = 1 - gTargetTexture;
         tuneBatch();
         gBatch=0;
+
+        GL_CALL(glBindTexture(GL_TEXTURE_2D, gTexture[gTargetTexture]));
+        GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, gSettings.winWidth / gRes, gSettings.winHeight / gRes, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, 0));
+        GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, gTextureFrameBuffer));
+        GL_CALL(glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, gTexture[gTargetTexture], 0));
+        GL_CALL(glDrawBuffers(1, gTextureDrawBuffers));
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            printf("Framebuffer not complete at line %i\n", __LINE__);
+
+        GL_CALL(glBindVertexArray(gGenericVertexArray));
+
+        GL_CALL(glUseProgram(gTexPassPID));
+
+        GL_CALL(glActiveTexture(GL_TEXTURE0));
+        GL_CALL(glBindTexture(GL_TEXTURE_2D, gTexture[1 - gTargetTexture]));
+
+        GL_CALL(glViewport(0, 0, gSettings.winWidth / gRes, gSettings.winHeight / gRes));
+
+        GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 6));
     }
     if (gBatch < gNoBatches)
     {
         struct _timeb startTime, endTime;
         _ftime(&startTime);
         gProgress = (int)((100.0 * gBatch / gNoBatches));
-        GL_CALL(glBindTexture(GL_TEXTURE_2D, gTexture[gTargetTexture]));
-        GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, gSettings.winWidth / gRes, gSettings.winHeight / gRes, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, 0));
         GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, gTextureFrameBuffer));
-        GL_CALL(glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, gTexture[gTargetTexture], 0));
-        GL_CALL(glDrawBuffers(1, gTextureDrawBuffers));
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             printf("Framebuffer not complete at line %i\n", __LINE__);
 

@@ -48,6 +48,7 @@ bool Mset::initGL()
 
     GL_CALL(gTexturePID[0] = LoadShaders(true, "res/shaders/vertexpassthrough.txt", gSettings.lowShader.c_str()));
     GL_CALL(gTexturePID[1] = LoadShaders(true, "res/shaders/vertexpassthrough.txt", gSettings.highShader.c_str()));
+    GL_CALL(gTexPassPID = LoadShaders(true, "res/shaders/vertexpassthrough.txt", "res/shaders/calcfragmentpass.txt"));
 
     for (int i = 0; i < 2; i++)
     {
@@ -55,9 +56,15 @@ bool Mset::initGL()
         GL_GET_LOCATION(gTexturePID[i], scale, gScaleLocation[i]);
         GL_GET_LOCATION(gTexturePID[i], params, gParamsLocation[i]);
         GL_GET_LOCATION(gTexturePID[i], inTex, gCalcTexLocation[i]);
+//        GL_GET_LOCATION(gTexturePID[i], rect, gCalcRectLocation[i]);
         GL_CALL(glUseProgram(gTexturePID[i]));
         GL_CALL(glUniform1i(gCalcTexLocation[i], 0));
     }
+
+    int t = -1;
+    GL_GET_LOCATION(gTexPassPID, inTex, t);
+    GL_CALL(glUseProgram(gTexPassPID));
+    GL_CALL(glUniform1i(t, 0));
 
     return success;
 }
