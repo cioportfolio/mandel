@@ -59,5 +59,5 @@ bool Mset::initGL()
         GL_CALL(glUniform1i(gCalcTexLocation[i], 0));
     }
 
-    return buildWinData();
+    return success;
 }

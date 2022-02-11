@@ -15,30 +15,20 @@ bool Mset::restart(int r)
     gBatch=0;
     tuneBatch();
 
-    GL_CALL(glBindTexture(GL_TEXTURE_2D, gTexture[gTargetTexture]));
-    GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, gSettings.winWidth / gPrevRes, gSettings.winHeight / gPrevRes, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, 0));
-    GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, gTextureFrameBuffer));
-    GL_CALL (glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, gTexture[gTargetTexture], 0));
-    GL_CALL (glClearBufferiv(GL_COLOR, 0, gTexEmpty));
+    for (int i = 0; i < 2; i++)
+    {
+        GL_CALL(glBindTexture(GL_TEXTURE_2D, gTexture[i]));
+        GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, gSettings.winWidth / gSettings.minRes, gSettings.winHeight / gSettings.minRes, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, 0));
+        GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
+        GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
+        GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, gTextureFrameBuffer));
+        GL_CALL(glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, gTexture[i], 0));
+        GL_CALL(glClearBufferiv(GL_COLOR, 0, gTexEmpty));
+    }
 
     gM.gPrecision = (gSettings.scaler.h < gSettings.quadZoom);
     return true;
 }
-
-/* bool Mset::resize()
-{
-    if (!gInitialised) return false;
-//    gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight/ gSettings.winWidth));
-
-    for (int i = 0; i < 2; i++)
-    {
-        GL_CALL(glBindTexture(GL_TEXTURE_2D, gTexture[i]));
-    }
-
-    buildWinData();
-
-    return true;
-} */
 
 bool Mset::iterating()
 {
@@ -122,7 +112,7 @@ bool Mset::iterate()
             if (gRes > 1)
                 gRes /= 2;
         }
-    }
+    } 
     return true;
 }
 
@@ -145,43 +135,4 @@ void Mset::paint()
     GL_CALL(glViewport(0, 0, gSettings.winWidth, gSettings.winHeight));
 
     GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 2*3));
-}
-
-bool Mset::buildWinData()
-{
-    bool success = true;
-
-/*    gNoVertices = gSettings.winWidth * gSettings.winHeight;
-    gNoCoords = gNoVertices * 2;
-
-    if (gVBD != nullptr)
-    {
-        //gLog("About to delete gVBD\n");
-        delete[] gVBD;
-    }
-    //gLog("About to create gVBD\n");
-    gVBD = new GLint[gNoCoords];
-    int i = 0;
-    for (int y = 0; y < gSettings.winHeight; y++)
-    {
-        for (int x = 0; x < gSettings.winWidth; x++)
-        {
-            gVBD[i++] = x;
-            gVBD[i++] = y;
-        }
-    }
-
-    glBindBuffer(GL_ARRAY_BUFFER, gVBO);
-    checkGLError(__LINE__);
-
-    glBufferData(GL_ARRAY_BUFFER, sizeof(GLint) * gNoCoords, gVBD, GL_STATIC_DRAW);
-    checkGLError(__LINE__);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, gFramebuffer);
-    glFramebufferTexture(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, gTexture[gOutTexture], 0);
-    glDrawBuffers(2, gDrawBuffers);
-    glClearBufferiv(GL_COLOR, 1, gTexEmpty);
-    checkGLError(__LINE__); */
-
-    return success;
 }

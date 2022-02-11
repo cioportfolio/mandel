@@ -27,25 +27,50 @@ double magpow2(in dvec2 z){
 
 void main()
 {
-	int ic = -1;
-	if (mod(gl_FragCoord.x, 2.0) == 0.0 && mod(gl_FragCoord.y, 2.0) == 0.0)
-	{
-		ic = texelFetch( inTex, ivec2(floor(gl_FragCoord.x)/2, floor(gl_FragCoord.y)/2), 0).r;
-	}
-	else
-	{
-		dvec2 c = dvec2(fUV.x*scale.x+centre.x,fUV.y*scale.z+centre.z);
-		dvec2 z = dvec2(0,0);
+	ivec2 parent = ivec2(floor(gl_FragCoord.x)/2, floor(gl_FragCoord.y)/2);
+	int ic = texelFetch( inTex, parent, 0).r;
 
-		ic = 0;
-		for (int i=0;i<maxI;i++)
+	if (mod(gl_FragCoord.x, 2.0) != 0.0 || mod(gl_FragCoord.y, 2.0) != 0.0 || ic == -1)
+	{
+		bool same = true;
+		if (ic > -1)
 		{
-			if (magpow2(z) > 4)
+			for (int x = -2; x <3 && same; x++)
 			{
-				ic = i;	
-				break;
+				if (parent.x + x >= 0 && parent.x + x < width/res/2)
+				{
+					for (int y = -2; y<3 && same; y++)
+					{
+						if (parent.y + y >= 0 && parent.y + y < width/res/2 && (x != 0 || y != 0))
+						{
+							if (texelFetch( inTex, ivec2(parent.x + x, parent.y + y), 0).r != ic)
+							{
+								same = false;
+							}
+						}
+					}
+				}
 			}
-			z = sqr(z)+c;
+		}
+		else
+		{
+			same = false;
+		}
+		if (!same || ic == -1)
+		{
+			dvec2 c = dvec2(fUV.x*scale.x+centre.x,fUV.y*scale.z+centre.z);
+			dvec2 z = dvec2(0,0);
+
+			ic = 0;
+			for (int i=0;i<maxI;i++)
+			{
+				if (magpow2(z) > 4)
+				{
+					ic = i;	
+					break;
+				}
+				z = sqr(z)+c;
+			}
 		}
 	}
 	itCount = ic;

@@ -16,7 +16,6 @@ public:
     float frameDuration = 400;
     bool init();
     bool restart(int r = gSettings.minRes);
-    bool resize();
     bool iterate();
     bool iterating();
     void paint();
@@ -29,7 +28,6 @@ public:
 private:
     void checkGLError(int l);
     bool initGL();
-    bool buildWinData();
     void tuneBatch();
     const GLfloat gGenericBD[12] =
     {
