@@ -84,7 +84,7 @@ bool Mset::iterate()
         int xBatches = gSettings.winWidth / gRes / xBatchSize;
         int xBatchStart = gBatch * xBatchSize;
         int xBatchEnd = gBatch * xBatchSize + xBatchSize;
-        if (xBatchEnd <= gSettings.winWidth / gRes)
+        if (xBatchStart <= gSettings.winWidth / gRes)
         {
             if (xBatchEnd > gSettings.winWidth / gRes)
             {
