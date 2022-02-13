@@ -23,7 +23,8 @@ public:
     void saveFrame(const char* f);
     GLuint LoadShaders(bool feedback, const char* vertex_file_path, const char* fragment_file_path);
     int gPrecision = 0;
-    int gNoBatches = 4;
+    int gDrawnPoints = 0;
+    int gNoPoints = 0;
 
 private:
     void checkGLError(int l);
@@ -58,7 +59,12 @@ private:
     int gPrevRes = 0;
 
     bool gInitialised = false;
-    int gBatch = 0;
+    int gXBatchSize = 0;
+    int gYBatchSize = 0;
+    int gDrawnTop = -1;
+    int gDrawnBottom = -1;
+    int gDrawnLeft = -1;
+    int gDrawnRight = -1;
 //    int gIndStep = 0;
     GLenum gTextureDrawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
     GLint gTexEmpty[4] = { -1,-1,-1,-1 };

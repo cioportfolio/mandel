@@ -12,7 +12,11 @@ bool Mset::restart(int r)
     if (!gInitialised) return false;
     gRes = r;
     gPrevRes = gRes*2;
-    gBatch=0;
+    gDrawnPoints=0;
+    gDrawnTop = -1;
+    gDrawnBottom = -1;
+    gDrawnLeft = -1;
+    gDrawnRight = -1;
     tuneBatch();
 
     for (int i = 0; i < 2; i++)
@@ -32,14 +36,17 @@ bool Mset::restart(int r)
 
 bool Mset::iterating()
 {
-    return (gPrevRes > 1 || gBatch < gNoBatches);
+    return (gPrevRes > 1 || gDrawnPoints < gNoPoints);
 }
 
 void Mset::tuneBatch()
 {
-        long long workEst = (long long) gSettings.winWidth / gRes * gSettings.winHeight / gRes * gSettings.thresh * (1 + (gSettings.highCapFactor - 1)*gPrecision);
-        long long capacityEst = gSettings.frameCap * gSettings.durationTarget / frameDuration;
-        gNoBatches = workEst < capacityEst * 2 ? 1 : workEst / capacityEst;
+    gNoPoints = gSettings.winWidth / gRes * gSettings.winHeight / gRes;
+    long long workEst = (long long)gNoPoints * gSettings.thresh * (1 + (gSettings.highCapFactor - 1) * gPrecision);
+    long long capacityEst = gSettings.frameCap * gSettings.durationTarget / frameDuration;
+    int batches = workEst < capacityEst * 2 ? 1 : workEst / capacityEst;
+//    gXBatchSize = gSettings.winWidth / gRes < batches * 2 ? 1 : gSettings.winWidth / gRes / batches;
+    gYBatchSize = gSettings.winHeight / gRes < batches * 2 ? 1 : gSettings.winHeight / gRes / batches;
 }
 
 bool Mset::iterate()
@@ -47,12 +54,16 @@ bool Mset::iterate()
     if (!gInitialised) return false;
 
 
-    if (gBatch >= gNoBatches && gRes != gPrevRes)
+    if (gDrawnPoints >= gNoPoints && gRes != gPrevRes)
     {
+//        printf("Next pass height %d \n", gSettings.winHeight / gRes);
         gTargetTexture = 1 - gTargetTexture;
         tuneBatch();
-        gBatch=0;
-
+        gDrawnPoints=0;
+        gDrawnTop = -1;
+        gDrawnBottom = -1;
+        gDrawnLeft = -1;
+        gDrawnRight = -1;
         GL_CALL(glBindTexture(GL_TEXTURE_2D, gTexture[gTargetTexture]));
         GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, gSettings.winWidth / gRes, gSettings.winHeight / gRes, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, 0));
         GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, gTextureFrameBuffer));
@@ -72,11 +83,11 @@ bool Mset::iterate()
 
         GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 6));
     }
-    if (gBatch < gNoBatches)
+    if (gDrawnPoints < gNoPoints)
     {
         struct _timeb startTime, endTime;
         _ftime(&startTime);
-        gProgress = (int)((100.0 * gBatch / gNoBatches));
+        gProgress = (int)((100.0 * gDrawnPoints / gNoPoints));
         GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, gTextureFrameBuffer));
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             printf("Framebuffer not complete at line %i\n", __LINE__);
@@ -95,33 +106,58 @@ bool Mset::iterate()
         GL_CALL(glViewport(0,0,gSettings.winWidth/gRes,gSettings.winHeight/gRes));
 
         GL_CALL(glEnable(GL_SCISSOR_TEST));
-        int xBatchSize = gSettings.winWidth/gRes < 2*gNoBatches ? 1: gSettings.winWidth / gRes / gNoBatches;
-        int xBatches = gSettings.winWidth / gRes / xBatchSize;
-        int xBatchStart = gBatch * xBatchSize;
-        int xBatchEnd = gBatch * xBatchSize + xBatchSize;
-        if (xBatchStart <= gSettings.winWidth / gRes)
+        int yBatchStart = -1;
+        int yBatchEnd = -1;
+        if (gDrawnBottom < gSettings.winHeight / gRes - gDrawnTop)
         {
-            if (xBatchEnd > gSettings.winWidth / gRes)
+            if (gDrawnTop == -1)
             {
-                xBatchEnd = gSettings.winWidth / gRes;
-                gBatch = gNoBatches;
+                yBatchStart = gSettings.winHeight / gRes / 2;
             }
-            GL_CALL(glScissor(xBatchStart, 0, xBatchEnd, gSettings.winHeight / gRes));
-            GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 6));
-            GL_CALL(glFinish());
-            GL_CALL(glDisable(GL_SCISSOR_TEST));
+            else
+            {
+                yBatchStart = gDrawnTop;
+            }
+            yBatchEnd = yBatchStart + gYBatchSize;
+            if (yBatchEnd > gSettings.winHeight / gRes) {
+                yBatchEnd = gSettings.winHeight / gRes;
+            }
+//            printf("Top batch %d - %d\n", yBatchStart, yBatchEnd);
         }
         else
         {
-            gBatch = gNoBatches;
+            if (gDrawnBottom == -1)
+            {
+                yBatchEnd = gSettings.winHeight / gRes / 2;
+            }
+            else
+            {
+                yBatchEnd = gDrawnBottom;
+            }
+            yBatchStart = yBatchEnd - gYBatchSize;
+            if (yBatchStart < 0) {
+                yBatchStart = 0;
+            }
+//            printf("Bottom batch %d - %d\n", yBatchStart, yBatchEnd);
         }
-        gBatch++;
+
+        GL_CALL(glScissor(0, yBatchStart, gSettings.winWidth / gRes, yBatchEnd - yBatchStart));
+        GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 6));
+        GL_CALL(glFinish());
+        GL_CALL(glDisable(GL_SCISSOR_TEST));
+
+        if (gDrawnBottom == -1 || yBatchStart < gDrawnBottom)
+            gDrawnBottom = yBatchStart;
+        if (gDrawnTop == -1 || yBatchEnd > gDrawnTop)
+            gDrawnTop = yBatchEnd;
+        gDrawnPoints += (yBatchEnd - yBatchStart) * gSettings.winWidth / gRes;
+
         _ftime(&endTime);
         endTime.time -= startTime.time;
         float newDuration = 1000.0 * endTime.time + endTime.millitm - startTime.millitm;
         frameDuration = (1.0 - gSettings.durationFilter)*frameDuration + gSettings.durationFilter * newDuration;
-//        tuneBatch();
-        if (gBatch >= gNoBatches)
+        tuneBatch();
+        if (gDrawnPoints >= gNoPoints)
         {
             gPrevRes = gRes;
             if (gRes > 1)
@@ -143,7 +179,7 @@ void Mset::paint()
 
     GL_CALL(glUseProgram(gScreenPID));
 
-    int paintRes = gBatch < gNoBatches ? gRes : gPrevRes;
+    int paintRes = gDrawnPoints < gNoPoints ? gRes : gPrevRes;
     GL_CALL(glUniform4i(gScrParamLocation, gSettings.thresh, paintRes, gSettings.winWidth, gSettings.winHeight));
     GL_CALL(glUniform2f(gColMapLocation, gSettings.baseHue, gSettings.hueScale));
     
