@@ -9,14 +9,14 @@ out vec3 color;
 // Values that stay constant for the whole mesh.
 
 uniform isampler2D tex;
-
+uniform float zoom;
+uniform vec2 colmap;
 uniform ivec4 params;
+
 int maxI = params.x;
 int res = params.y;
 int width = params.z;
 int height = params.w;
-
-uniform vec2 colmap;
 
 vec3 rainbow(float c)
 {
@@ -37,10 +37,8 @@ vec3 iter2col(int iter) {
     return rainbow(colmap.x + r*colmap.y);
 }
 
-
-
 void main(){
-    ivec2 UV = ivec2(gl_FragCoord.x/res, gl_FragCoord.y/res);
+    ivec2 UV = ivec2(width/2/res + (gl_FragCoord.x - width/2)/res/zoom, height/2/res + (gl_FragCoord.y - height/2)/res/zoom);
 
     // Output color = color of the texture at the specified UV
     int itCount = texelFetch(tex, UV, 0).r;

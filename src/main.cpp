@@ -327,8 +327,13 @@ void handleMouse(SDL_Event e)
 			gSettings.scaler = gSettings.scaler.mul(Quad(1.0 - dir * gSettings.zoomFraction));
 //			gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
 			SDL_WarpMouseInWindow(gGLWindow, gSettings.winWidth / 2, gSettings.winHeight / 2);
-			gM.restart();
-			gM.iterate();
+			if (dir > 0.0) {
+				gM.zoomIn();
+			}
+			else
+			{
+				gM.zoomOut();
+			}
 			render();
 		}
 	}

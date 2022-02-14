@@ -42,6 +42,7 @@ bool Mset::initGL()
     
     GL_GET_LOCATION(gScreenPID, tex, gPaintTexLocation);
     glUniform1i(gPaintTexLocation, 0);
+    GL_GET_LOCATION(gScreenPID, zoom, gPaintZoomLocation);
 
     GL_GET_LOCATION(gScreenPID, params, gScrParamLocation);
     GL_GET_LOCATION(gScreenPID, colmap, gColMapLocation);

@@ -19,6 +19,8 @@ public:
     bool restart(int r = gSettings.minRes);
     bool iterate();
     bool iterating();
+    bool zoomIn();
+    bool zoomOut();
     void paint();
     void close();
     void saveFrame(const char* f);
@@ -26,6 +28,7 @@ public:
     int gPrecision = 0;
     int gDrawnPoints = 0;
     int gNoPoints = 0;
+    float gZoomExp = 0.0;
 
 private:
     void checkGLError(int l);
@@ -53,6 +56,8 @@ private:
     GLint gPaintTexLocation = -1;
     GLint gCalcTexLocation[2] = {-1,-1};
     GLint gPassParamsLocation = -1;
+    GLint gPaintZoomLocation = -1;
+
 //    GLint gCalcRectLocation[2] = { -1,-1 };
     GLuint gVertexBufferObject = 0;
     GLuint gTextureFrameBuffer = 0;
@@ -74,4 +79,5 @@ private:
     Quad bottom = Quad(0.0);
     Quad left = Quad(0.0);
     Quad step = Quad(0, 0);
+
 };

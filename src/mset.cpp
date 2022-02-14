@@ -6,6 +6,30 @@
 #include <time.h>
 #include <sys/timeb.h>
 
+bool Mset::zoomIn()
+{
+    float lastZoom = gZoomExp;
+    gZoomExp += gSettings.zoomFraction;
+    if (floor(lastZoom) != floor(gZoomExp))
+    {
+        restart();
+        iterate();
+    }
+    return true;
+}
+
+bool Mset::zoomOut()
+{
+    float lastZoom = gZoomExp;
+    gZoomExp -= gSettings.zoomFraction;
+    if (floor(lastZoom) != floor(gZoomExp))
+    {
+        restart();
+        iterate();
+    }
+    return true;
+}
+
 bool Mset::restart(int r)
 {
     if (!gInitialised) return false;
@@ -31,6 +55,7 @@ bool Mset::restart(int r)
 
     gM.gPrecision = (gSettings.scaler.h < gSettings.quadZoom);
 
+    gSettings.scaler = Quad(pow(2.0, -floor(gZoomExp)));
     gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
     bottom = gSettings.centrei.add(gSettings.scalei.mul(Quad(-1.0)));
     left = gSettings.centrer.add(gSettings.scaler.mul(Quad(-1.0)));
@@ -187,8 +212,10 @@ void Mset::paint()
     GL_CALL(glUseProgram(gScreenPID));
 
     int paintRes = gDrawnPoints < gNoPoints ? gRes : gPrevRes;
+    float zoom = pow(2.0, gZoomExp - floor(gZoomExp));
     GL_CALL(glUniform4i(gScrParamLocation, gSettings.thresh, paintRes, gSettings.winWidth, gSettings.winHeight));
     GL_CALL(glUniform2f(gColMapLocation, gSettings.baseHue, gSettings.hueScale));
+    GL_CALL(glUniform1f(gPaintZoomLocation, zoom));
     
     GL_CALL(glViewport(0, 0, gSettings.winWidth, gSettings.winHeight));
 
