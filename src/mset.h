@@ -3,6 +3,7 @@
 #define GLEW_STATIC
 #include <GL/glew.h>
 #include "settings.h"
+#include "quad.h"
 
 extern Settings gSettings;
 
@@ -44,8 +45,8 @@ private:
     GLuint gTexturePID[2] = { 0,0 };
     GLuint gScreenPID = 0;
     GLuint gTexPassPID = 0;
-    GLint gCentreLocation[2] = { -1,-1 };
-    GLint gScaleLocation[2] = { -1,-1 };
+    GLint gBLLocation[2] = { -1,-1 };
+    GLint gStepLocation[2] = { -1,-1 };
     GLint gColMapLocation = -1;
     GLint gParamsLocation[2] = {-1,-1};
     GLint gScrParamLocation = -1;
@@ -68,4 +69,8 @@ private:
 //    int gIndStep = 0;
     GLenum gTextureDrawBuffers[1] = { GL_COLOR_ATTACHMENT0 };
     GLint gTexEmpty[4] = { -1,-1,-1,-1 };
+
+    Quad bottom = Quad(0.0);
+    Quad left = Quad(0.0);
+    Quad step = Quad(0, 0);
 };

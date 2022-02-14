@@ -2,7 +2,6 @@
 
 #include "globals.h"
 #include "mset.h"
-#include "quad.h"
 #include <sys/types.h>
 #include <time.h>
 #include <sys/timeb.h>
@@ -31,6 +30,12 @@ bool Mset::restart(int r)
     }
 
     gM.gPrecision = (gSettings.scaler.h < gSettings.quadZoom);
+
+    gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
+    bottom = gSettings.centrei.add(gSettings.scalei.mul(Quad(-1.0)));
+    left = gSettings.centrer.add(gSettings.scaler.mul(Quad(-1.0)));
+    step = gSettings.scaler.mul(Quad(2.0 / gSettings.winWidth));
+
     return true;
 }
 
@@ -95,9 +100,9 @@ bool Mset::iterate()
         GL_CALL(glBindVertexArray(gGenericVertexArray));
 
         GL_CALL(glUseProgram(gTexturePID[gPrecision]));
-        GL_CALL(glUniform4d(gCentreLocation[gPrecision], gSettings.centrer.h, gSettings.centrer.l, gSettings.centrei.h, gSettings.centrei.l));
-        gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
-        GL_CALL(glUniform4d(gScaleLocation[gPrecision], gSettings.scaler.h, gSettings.scaler.l, gSettings.scalei.h, gSettings.scalei.l));
+        GL_CALL(glUniform4d(gBLLocation[gPrecision], left.h, left.l, bottom.h, bottom.l));
+//        gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
+        GL_CALL(glUniform2d(gStepLocation[gPrecision], step.h, step.l));
         GL_CALL(glUniform4i(gParamsLocation[gPrecision], gSettings.thresh, gSettings.winWidth, gSettings.winHeight, gRes));
 
         GL_CALL(glActiveTexture(GL_TEXTURE0));

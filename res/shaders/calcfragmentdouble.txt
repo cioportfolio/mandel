@@ -6,8 +6,8 @@ out int itCount;
 
 uniform isampler2D inTex;
 
-uniform dvec4 centre;
-uniform dvec4 scale;
+uniform dvec4 bottomLeft;
+uniform dvec2 step;
 uniform ivec4 params;
 
 int maxI = params.x;
@@ -57,7 +57,7 @@ void main()
 		}
 		if (!same || ic == -1)
 		{
-			dvec2 c = dvec2(fUV.x*scale.x+centre.x,fUV.y*scale.z+centre.z);
+			dvec2 c = dvec2(point.x*step.x * res +bottomLeft.x,point.y*step.x * res +bottomLeft.z);
 			dvec2 z = dvec2(0,0);
 
 			ic = 0;

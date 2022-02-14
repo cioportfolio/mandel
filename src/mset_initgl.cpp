@@ -52,8 +52,8 @@ bool Mset::initGL()
 
     for (int i = 0; i < 2; i++)
     {
-        GL_GET_LOCATION(gTexturePID[i], centre, gCentreLocation[i]);                       
-        GL_GET_LOCATION(gTexturePID[i], scale, gScaleLocation[i]);
+        GL_GET_LOCATION(gTexturePID[i], bottomLeft, gBLLocation[i]);                       
+        GL_GET_LOCATION(gTexturePID[i], step, gStepLocation[i]);
         GL_GET_LOCATION(gTexturePID[i], params, gParamsLocation[i]);
         GL_GET_LOCATION(gTexturePID[i], inTex, gCalcTexLocation[i]);
 //        GL_GET_LOCATION(gTexturePID[i], rect, gCalcRectLocation[i]);
