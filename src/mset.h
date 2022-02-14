@@ -52,6 +52,7 @@ private:
     GLint gScrParamLocation = -1;
     GLint gPaintTexLocation = -1;
     GLint gCalcTexLocation[2] = {-1,-1};
+    GLint gPassParamsLocation = -1;
 //    GLint gCalcRectLocation[2] = { -1,-1 };
     GLuint gVertexBufferObject = 0;
     GLuint gTextureFrameBuffer = 0;

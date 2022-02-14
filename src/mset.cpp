@@ -80,6 +80,8 @@ bool Mset::iterate()
         GL_CALL(glBindVertexArray(gGenericVertexArray));
 
         GL_CALL(glUseProgram(gTexPassPID));
+        GL_CALL(glUniform4i(gPassParamsLocation, 0, 0, 1, 2));
+
 
         GL_CALL(glActiveTexture(GL_TEXTURE0));
         GL_CALL(glBindTexture(GL_TEXTURE_2D, gTexture[1 - gTargetTexture]));

@@ -6,11 +6,16 @@ out int itCount;
 
 uniform isampler2D inTex;
 
+uniform ivec4 params;
+ivec2 offset = params.xy;
+int scaleNom = params.z;
+int scaleDen = params.w;
+
 void main()
 {
-	ivec2 point = ivec2(floor(gl_FragCoord.x), floor(gl_FragCoord.y));
-	ivec2 parent = point/2;
-	int ic = texelFetch( inTex, parent, 0).r;
+	ivec2 dest = ivec2(floor(gl_FragCoord.x), floor(gl_FragCoord.y));
+	ivec2 source = ivec2(dest.x*scaleNom/scaleDen+offset.x, dest.y*scaleNom/scaleDen+offset.y);
+	int ic = texelFetch( inTex, source, 0).r;
 
 	itCount = ic;
 }

@@ -62,6 +62,7 @@ bool Mset::initGL()
     }
 
     int t = -1;
+    GL_GET_LOCATION(gTexPassPID, params, gPassParamsLocation);
     GL_GET_LOCATION(gTexPassPID, inTex, t);
     GL_CALL(glUseProgram(gTexPassPID));
     GL_CALL(glUniform1i(t, 0));
