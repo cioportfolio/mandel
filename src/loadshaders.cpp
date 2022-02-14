@@ -15,7 +15,7 @@ GLuint Mset::LoadShaders(bool feedback, const char *vertex_file_path, const char
 	// Read the Vertex Shader code from the file
 	std::string VertexShaderCode;
 	std::ifstream VertexShaderStream(vertex_file_path, std::ios::in);
-	if (VertexShaderStream.is_open())
+	if (VertexShaderStream.is_open() && VertexShaderStream.good())
 	{
 		std::stringstream sstr;
 		sstr << VertexShaderStream.rdbuf();
@@ -31,12 +31,17 @@ GLuint Mset::LoadShaders(bool feedback, const char *vertex_file_path, const char
 	// Read the Fragment Shader code from the file
 	std::string FragmentShaderCode;
 	std::ifstream FragmentShaderStream(fragment_file_path, std::ios::in);
-	if (FragmentShaderStream.is_open())
+	if (FragmentShaderStream.is_open() && FragmentShaderStream.good())
 	{
 		std::stringstream sstr;
 		sstr << FragmentShaderStream.rdbuf();
 		FragmentShaderCode = sstr.str();
 		FragmentShaderStream.close();
+	}
+	else
+	{
+		printf("Impossible to open %s. Are you in the right directory ?", fragment_file_path);
+		return 0;
 	}
 
 	GLint Result = GL_FALSE;

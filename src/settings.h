@@ -1,5 +1,4 @@
-#ifndef SETTINGS_H_INCLUDED
-#define SETTINGS_H_INCLUDED
+#pragma once
 
 #include <string>
 #include "quad.h"
@@ -18,7 +17,7 @@ public:
     int highCapFactor = 8;
     float quadZoom = 1e-13;
 
-    double moveFraction = 1.0/64.0;
+    int moveStep = 1;
     double zoomFraction = 0.05;
     double threshFraction = 0.25;
     double hueFraction = 1.0/12.0;
@@ -32,7 +31,10 @@ public:
     Quad centrer = Quad(-0.5);
     Quad centrei = Quad(0.0);
     Quad scaler = Quad(1.0);
-    Quad scalei = Quad(1.0);
+    Quad scalei()
+    {
+        return scaler.mul(Quad((double)winHeight / winWidth));
+    }
 
     std::string lowShader = "";
     std::string highShader = "";
@@ -48,4 +50,3 @@ public:
     int movThreshStart = 1000;
     int movThreshEnd = 10000;
 };
-#endif // SETTINGS_H_INCLUDED

@@ -13,22 +13,23 @@ class Mset
 {
 public:
     int gRes = 0;
-    int gProgress = 100;
     float frameDuration = 400;
+    int progress()
+    {
+        return gDrawnPoints * 100 / gNoPoints;
+    }
     bool init();
     bool restart(int r = gSettings.minRes);
     bool iterate();
     bool iterating();
     bool zoomIn();
     bool zoomOut();
+    bool shift(int x, int y);
     void paint();
     void close();
     void saveFrame(const char* f);
     GLuint LoadShaders(bool feedback, const char* vertex_file_path, const char* fragment_file_path);
     int gPrecision = 0;
-    int gDrawnPoints = 0;
-    int gNoPoints = 0;
-    float gZoomExp = 0.0;
 
 private:
     void checkGLError(int l);
@@ -58,7 +59,6 @@ private:
     GLint gPassParamsLocation = -1;
     GLint gPaintZoomLocation = -1;
 
-//    GLint gCalcRectLocation[2] = { -1,-1 };
     GLuint gVertexBufferObject = 0;
     GLuint gTextureFrameBuffer = 0;
     int gTargetTexture = 0;
@@ -80,4 +80,9 @@ private:
     Quad left = Quad(0.0);
     Quad step = Quad(0, 0);
 
+    float gZoomExp = 0.0;
+
+    int gDrawnPoints = 0;
+    int gNoPoints = 1;
+    int gProgress = 100;
 };

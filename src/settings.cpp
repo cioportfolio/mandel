@@ -57,9 +57,9 @@ bool Settings::load (const char* filename)
     if (itr != settingsDoc.MemberEnd())
         quadZoom = itr->value.GetFloat();
 
-    itr = settingsDoc.FindMember("movefraction");
+    itr = settingsDoc.FindMember("movestep");
     if (itr != settingsDoc.MemberEnd())
-        moveFraction = itr->value.GetDouble();
+        moveStep = itr->value.GetInt();
 
     itr = settingsDoc.FindMember("zoomfraction");
     if (itr != settingsDoc.MemberEnd())
@@ -176,7 +176,7 @@ bool Settings::save (const char* filename)
     fs << "\"durationfilter\": " << durationFilter << "," << std::endl;
     fs <<"\"highcapfactor\": "<<highCapFactor<<","<<std::endl;
     fs << "\"quadzoom\": " << quadZoom << "," << std::endl;
-    fs<<"\"movefraction\": "<<moveFraction<<","<<std::endl;
+    fs<<"\"movestep\": " <<moveStep<<","<<std::endl;
     fs<<"\"zoomfraction\": "<<zoomFraction<<","<<std::endl;
     fs<<"\"threshfraction\": "<<threshFraction<<","<<std::endl;
     fs<<"\"huefraction\": "<<hueFraction<<","<<std::endl;

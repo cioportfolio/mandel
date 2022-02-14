@@ -10,6 +10,7 @@ bool Mset::zoomIn()
 {
     float lastZoom = gZoomExp;
     gZoomExp += gSettings.zoomFraction;
+    gSettings.scaler = Quad(pow(2.0, -gZoomExp));
     if (floor(lastZoom) != floor(gZoomExp))
     {
         restart();
@@ -22,8 +23,21 @@ bool Mset::zoomOut()
 {
     float lastZoom = gZoomExp;
     gZoomExp -= gSettings.zoomFraction;
+    gSettings.scaler = Quad(pow(2.0, -gZoomExp));
     if (floor(lastZoom) != floor(gZoomExp))
     {
+        restart();
+        iterate();
+    }
+    return true;
+}
+
+bool Mset::shift(int x, int y)
+{
+    if (x != 0 || y != 0)
+    {
+        gSettings.centrer = gSettings.centrer.add(step.mul(Quad(x)));
+        gSettings.centrei = gSettings.centrei.add(step.mul(Quad(y)));
         restart();
         iterate();
     }
@@ -55,11 +69,10 @@ bool Mset::restart(int r)
 
     gM.gPrecision = (gSettings.scaler.h < gSettings.quadZoom);
 
-    gSettings.scaler = Quad(pow(2.0, -floor(gZoomExp)));
-    gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
-    bottom = gSettings.centrei.add(gSettings.scalei.mul(Quad(-1.0)));
+    gZoomExp = -log2(gSettings.scaler.h);
+    bottom = gSettings.centrei.add(gSettings.scalei().mul(Quad(-1.0)));
     left = gSettings.centrer.add(gSettings.scaler.mul(Quad(-1.0)));
-    step = gSettings.scaler.mul(Quad(2.0 / gSettings.winWidth));
+    step = Quad(pow(2.0, -floor(gZoomExp))).mul(Quad(2.0 / gSettings.winWidth));
 
     return true;
 }
@@ -128,7 +141,6 @@ bool Mset::iterate()
 
         GL_CALL(glUseProgram(gTexturePID[gPrecision]));
         GL_CALL(glUniform4d(gBLLocation[gPrecision], left.h, left.l, bottom.h, bottom.l));
-//        gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
         GL_CALL(glUniform2d(gStepLocation[gPrecision], step.h, step.l));
         GL_CALL(glUniform4i(gParamsLocation[gPrecision], gSettings.thresh, gSettings.winWidth, gSettings.winHeight, gRes));
 

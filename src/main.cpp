@@ -145,8 +145,6 @@ bool handleWindow(SDL_WindowEvent we)
 		gM.iterate();
 		render();
 
-//		printf("Canvas Size %d / %d", w, h);
-
 		return true;
 	}
 	return false;
@@ -166,9 +164,7 @@ void handleKeys(SDL_Keysym key)
 		}
 		else
 		{
-			gSettings.centrer = gSettings.centrer.add(gSettings.scaler.mul(Quad(gSettings.moveFraction * (shiftKey ? 10 : 1))));
-			gM.restart();
-			gM.iterate();
+			gM.shift(shiftKey ? 10 : 1, 0);
 			render();
 		}
 		break;
@@ -180,9 +176,7 @@ void handleKeys(SDL_Keysym key)
 		}
 		else
 		{
-			gSettings.centrer = gSettings.centrer.add(gSettings.scaler.mul(Quad(-gSettings.moveFraction * (shiftKey ? 10 : 1))));
-			gM.restart();
-			gM.iterate();
+			gM.shift(shiftKey ? -10 : -1, 0);
 			render();
 		}
 		break;
@@ -194,9 +188,7 @@ void handleKeys(SDL_Keysym key)
 		}
 		else
 		{
-			gSettings.centrei = gSettings.centrei.add(gSettings.scalei.mul(Quad(-gSettings.moveFraction * (shiftKey ? 10 : 1))));
-			gM.restart();
-			gM.iterate();
+			gM.shift(0, shiftKey ? 10 : 1);
 			render();
 		}
 		break;
@@ -208,9 +200,7 @@ void handleKeys(SDL_Keysym key)
 		}
 		else
 		{
-			gSettings.centrei = gSettings.centrei.add(gSettings.scalei.mul(Quad(gSettings.moveFraction * (shiftKey ? 10 : 1))));
-			gM.restart();
-			gM.iterate();
+			gM.shift(0, shiftKey ? -10 : -1);
 			render();
 		}
 		break;
@@ -228,10 +218,7 @@ void handleKeys(SDL_Keysym key)
 		}
 		else
 		{
-			gSettings.scaler = gSettings.scaler.mul(Quad(1.0 + gSettings.moveFraction * (shiftKey ? 10 : 1)));
-//			gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
-			gM.restart();
-			gM.iterate();
+			gM.zoomIn();
 			render();
 		}
 		break;
@@ -249,9 +236,7 @@ void handleKeys(SDL_Keysym key)
 		}
 		else
 		{
-			gSettings.scaler = gSettings.scaler.mul(Quad(1.0 - gSettings.moveFraction * (shiftKey ? 10 : 1)));
-			gM.restart();
-			gM.iterate();
+			gM.zoomOut();
 			render();
 		}
 		break;
@@ -283,10 +268,7 @@ void handleMouse(SDL_Event e)
 		}
 		else
 		{
-			gSettings.centrer = gSettings.centrer.add(gSettings.scaler.mul(Quad((double)-x / gSettings.winWidth * 2.0)));
-			gSettings.centrei = gSettings.centrei.add(gSettings.scalei.mul(Quad((double)y / gSettings.winHeight *2.0)));
-			gM.restart();
-			gM.iterate();
+			gM.shift(-x, y);
 			render();
 		}
 	}
@@ -322,10 +304,7 @@ void handleMouse(SDL_Event e)
 			int dir = (e.wheel.y + e.wheel.x > 0) ? 1.0 : -1.0;
 			int x = 0, y = 0;
 			SDL_GetMouseState(&x, &y);
-			gSettings.centrer = gSettings.centrer.add(gSettings.scaler.mul(Quad(2.0 * x / gSettings.winWidth - 1.0)));
-			gSettings.centrei = gSettings.centrei.add(gSettings.scalei.mul(Quad(1.0 - 2.0 * y / gSettings.winHeight)));
-			gSettings.scaler = gSettings.scaler.mul(Quad(1.0 - dir * gSettings.zoomFraction));
-//			gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
+			gM.shift(x - gSettings.winWidth / 2, gSettings.winHeight - y - gSettings.winHeight / 2);
 			SDL_WarpMouseInWindow(gGLWindow, gSettings.winWidth / 2, gSettings.winHeight / 2);
 			if (dir > 0.0) {
 				gM.zoomIn();
@@ -345,24 +324,16 @@ void handleMouse(SDL_Event e)
 		SDL_GetMouseState(&x, &y);
 		if (m.button == SDL_BUTTON_LEFT && m.clicks == 2)
 		{
-			gSettings.centrer = gSettings.centrer.add(gSettings.scaler.mul(Quad(2.0 * x / gSettings.winWidth - 1.0)));
-			gSettings.centrei = gSettings.centrei.add(gSettings.scalei.mul(Quad(1.0 - 2.0 * y / gSettings.winHeight)));
-			gSettings.scaler = gSettings.scaler.mul(Quad(1.0 - gSettings.zoomFraction));
-//			gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
+			gM.shift(x - gSettings.winWidth / 2, gSettings.winHeight - y - gSettings.winHeight / 2);
 			SDL_WarpMouseInWindow(gGLWindow, gSettings.winWidth / 2, gSettings.winHeight / 2);
-			gM.restart();
-			gM.iterate();
+			gM.zoomIn();
 			render();
 		}
 		else if (m.button == SDL_BUTTON_RIGHT && m.clicks == 2)
 		{
-			gSettings.centrer = gSettings.centrer.add(gSettings.scaler.mul(Quad(2.0 * x / gSettings.winWidth - 1.0)));
-			gSettings.centrei = gSettings.centrei.add(gSettings.scalei.mul(Quad(1.0 - 2.0 * y / gSettings.winHeight)));
-			gSettings.scaler = gSettings.scaler.mul(Quad(1.0 + gSettings.zoomFraction));
-//			gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
+			gM.shift(x - gSettings.winWidth / 2, gSettings.winHeight - y - gSettings.winHeight / 2);
 			SDL_WarpMouseInWindow(gGLWindow, gSettings.winWidth / 2, gSettings.winHeight / 2);
-			gM.restart();
-			gM.iterate();
+			gM.zoomOut();
 			render();
 		}
 	}
@@ -490,7 +461,7 @@ void imGuiFrame()
 		ImGui::Begin("Controls", &showControls);
 		if (gM.iterating())
 		{
-			ImGui::Text("%i Bit. Resolution %i %i %% Batch duration %i", (gM.gPrecision == 1) ? 128 : 64, gM.gRes, gM.gProgress, (int)gM.frameDuration);
+			ImGui::Text("%i Bit. Resolution %i %i %% Batch duration %i", (gM.gPrecision == 1) ? 128 : 64, gM.gRes, gM.progress(), (int)gM.frameDuration);
 		}
 		else
 		{
@@ -626,7 +597,7 @@ void imGuiFrame()
 			ImGui::SliderFloat("Batch target time", &gSettings.durationTarget, 1.0, 1000.0);
 			ImGui::SliderFloat("Duration filter", &gSettings.durationFilter, 0.0, 1.0);
 			ImGui::SliderInt("Duration factor for High precision", &gSettings.highCapFactor, 1, 25);
-			ImGui::InputDouble("Move fraction", &gSettings.moveFraction);
+			ImGui::InputInt("Move fraction", &gSettings.moveStep);
 			ImGui::InputDouble("Zoom fraction", &gSettings.zoomFraction);
 			ImGui::InputDouble("Threshold fraction", &gSettings.threshFraction);
 			ImGui::InputDouble("Hue fraction", &gSettings.hueFraction);
