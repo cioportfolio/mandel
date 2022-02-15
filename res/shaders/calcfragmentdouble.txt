@@ -26,51 +26,59 @@ double magpow2(in dvec2 z){
 void main()
 {
 	ivec2 point = ivec2(floor(gl_FragCoord.x), floor(gl_FragCoord.y));
-	ivec2 parent = point/2;
-	int ic = texelFetch( inTex, parent, 0).r;
-
-	if (mod(gl_FragCoord.x, 2.0) != 0.0 || mod(gl_FragCoord.y, 2.0) != 0.0 || ic == -1)
+	int ic = texelFetch( inTex, point, 0).r;
+	if (mod(point.x, res) == 0 && mod(point.y, res) == 0 && ic == -1)
 	{
-		bool same = true;
-		if (ic > -1)
+		ivec2 parent = point/res/2 * res * 2;
+		ic = texelFetch( inTex, parent, 0).r;
+
+		if (mod(gl_FragCoord.x, 2.0 * res) != 0.0 || mod(gl_FragCoord.y, 2.0 * res) != 0.0 || ic == -1)
 		{
-			for (int x = -2; x <3 && same; x++)
+			bool same = true;
+			if (ic > -1)
 			{
-				if (parent.x + x >= 0 && parent.x + x < width/res/2)
+				for (int x = -2; x <3 && same; x++)
 				{
-					for (int y = -2; y<3 && same; y++)
+					if (parent.x + x * res * 2 >= 0 && parent.x + x * res * 2 < width)
 					{
-						if (parent.y + y >= 0 && parent.y + y < width/res/2 && (x != 0 || y != 0))
+						for (int y = -2; y<3 && same; y++)
 						{
-							if (texelFetch( inTex, ivec2(parent.x + x, parent.y + y), 0).r != ic)
+							if (parent.y + y * res * 2 >= 0 && parent.y + y * res * 2 < width && (x != 0 || y != 0))
 							{
-								same = false;
+								if (texelFetch( inTex, ivec2(parent.x + x * res * 2, parent.y + y * res * 2), 0).r != ic)
+								{
+									same = false;
+								}
 							}
 						}
 					}
 				}
 			}
-		}
-		else
-		{
-			same = false;
-		}
-		if (!same || ic == -1)
-		{
-			dvec2 c = dvec2(point.x*step.x * res +bottomLeft.x,point.y*step.x * res +bottomLeft.z);
-			dvec2 z = dvec2(0,0);
-
-			ic = 0;
-			for (int i=0;i<maxI;i++)
+			else
 			{
-				if (magpow2(z) > 4)
+				same = false;
+			}
+			if (!same || ic == -1)
+			{
+				dvec2 c = dvec2(point.x*step.x +bottomLeft.x,point.y*step.x +bottomLeft.z);
+				dvec2 z = dvec2(0,0);
+
+				ic = 0;
+				for (int i=0;i<maxI;i++)
 				{
-					ic = i;	
-					break;
+					if (magpow2(z) > 4)
+					{
+						ic = i;	
+						break;
+					}
+					z = sqr(z)+c;
 				}
-				z = sqr(z)+c;
 			}
 		}
+	}
+	else
+	{
+		ic = texelFetch( inTex, point, 0).r;
 	}
 	itCount = ic;
 }

@@ -486,7 +486,8 @@ void imGuiFrame()
 			gM.restart();
 			gM.iterate();
 		}
-		if (ImGui::SliderFloat("Zoom", &gSettings.zoomExp, 0, 30, "%e"))
+		ImGui::Text("Scale %e", pow(2.0, -gSettings.zoomExp));
+		if (ImGui::SliderFloat("Zoom", &gSettings.zoomExp, 0, 100, "%.1f"))
 		{
 			gM.restart();
 			gM.iterate();

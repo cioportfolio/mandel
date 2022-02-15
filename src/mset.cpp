@@ -53,6 +53,7 @@ bool Mset::restart(int r)
     gRes = r;
     gPrevRes = gRes*2;
     gDrawnPoints=0;
+    gNoPoints = 0;
     gDrawnTop = -1;
     gDrawnBottom = -1;
     gDrawnLeft = -1;
@@ -62,7 +63,7 @@ bool Mset::restart(int r)
     for (int i = 0; i < 2; i++)
     {
         GL_CALL(glBindTexture(GL_TEXTURE_2D, gTexture[i]));
-        GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, gSettings.winWidth / gSettings.minRes, gSettings.winHeight / gSettings.minRes, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, 0));
+        GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, gSettings.winWidth, gSettings.winHeight, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, 0));
         GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
         GL_CALL(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
         GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, gTextureFrameBuffer));
@@ -89,8 +90,8 @@ bool Mset::iterating()
 
 void Mset::tuneBatch()
 {
-    gNoPoints = gSettings.winWidth / gRes * gSettings.winHeight / gRes;
-    long long workEst = (long long)gNoPoints * gSettings.thresh * (1 + (gSettings.highCapFactor - 1) * gPrecision);
+    gNoPoints = gSettings.winWidth * gSettings.winHeight;
+    long long workEst = (long long)gNoPoints / gRes / gRes * gSettings.thresh * (1 + (gSettings.highCapFactor - 1) * gPrecision);
     long long capacityEst = gSettings.frameCap * gSettings.durationTarget / frameDuration;
     int batches = workEst < capacityEst * 2 ? 1 : workEst / capacityEst;
 //    gXBatchSize = gSettings.winWidth / gRes < batches * 2 ? 1 : gSettings.winWidth / gRes / batches;
@@ -113,7 +114,7 @@ bool Mset::iterate()
         gDrawnLeft = -1;
         gDrawnRight = -1;
         GL_CALL(glBindTexture(GL_TEXTURE_2D, gTexture[gTargetTexture]));
-        GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, gSettings.winWidth / gRes, gSettings.winHeight / gRes, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, 0));
+        GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, gSettings.winWidth, gSettings.winHeight, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, 0));
         GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, gTextureFrameBuffer));
         GL_CALL(glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, gTexture[gTargetTexture], 0));
         GL_CALL(glDrawBuffers(1, gTextureDrawBuffers));
@@ -123,13 +124,13 @@ bool Mset::iterate()
         GL_CALL(glBindVertexArray(gGenericVertexArray));
 
         GL_CALL(glUseProgram(gTexPassPID));
-        GL_CALL(glUniform4i(gPassParamsLocation, 0, 0, 1, 2));
+        GL_CALL(glUniform4i(gPassParamsLocation, 0, 0, 1, 1));
 
 
         GL_CALL(glActiveTexture(GL_TEXTURE0));
         GL_CALL(glBindTexture(GL_TEXTURE_2D, gTexture[1 - gTargetTexture]));
 
-        GL_CALL(glViewport(0, 0, gSettings.winWidth / gRes, gSettings.winHeight / gRes));
+        GL_CALL(glViewport(0, 0, gSettings.winWidth, gSettings.winHeight));
 
         GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 6));
     }
@@ -152,24 +153,24 @@ bool Mset::iterate()
         GL_CALL(glActiveTexture(GL_TEXTURE0));
         GL_CALL(glBindTexture(GL_TEXTURE_2D, gTexture[1-gTargetTexture]));
 
-        GL_CALL(glViewport(0,0,gSettings.winWidth/gRes,gSettings.winHeight/gRes));
+        GL_CALL(glViewport(0,0,gSettings.winWidth,gSettings.winHeight));
 
         GL_CALL(glEnable(GL_SCISSOR_TEST));
         int yBatchStart = -1;
         int yBatchEnd = -1;
-        if (gDrawnBottom < gSettings.winHeight / gRes - gDrawnTop)
+        if (gDrawnBottom < gSettings.winHeight - gDrawnTop)
         {
             if (gDrawnTop == -1)
             {
-                yBatchStart = gSettings.winHeight / gRes / 2;
+                yBatchStart = gSettings.winHeight / gRes / 2 * gRes;
             }
             else
             {
                 yBatchStart = gDrawnTop;
             }
-            yBatchEnd = yBatchStart + gYBatchSize;
-            if (yBatchEnd > gSettings.winHeight / gRes) {
-                yBatchEnd = gSettings.winHeight / gRes;
+            yBatchEnd = yBatchStart + gYBatchSize * gRes;
+            if (yBatchEnd > gSettings.winHeight) {
+                yBatchEnd = gSettings.winHeight;
             }
 //            printf("Top batch %d - %d\n", yBatchStart, yBatchEnd);
         }
@@ -177,20 +178,20 @@ bool Mset::iterate()
         {
             if (gDrawnBottom == -1)
             {
-                yBatchEnd = gSettings.winHeight / gRes / 2;
+                yBatchEnd = gSettings.winHeight / gRes / 2 * gRes;
             }
             else
             {
                 yBatchEnd = gDrawnBottom;
             }
-            yBatchStart = yBatchEnd - gYBatchSize;
+            yBatchStart = yBatchEnd - gYBatchSize * gRes;
             if (yBatchStart < 0) {
                 yBatchStart = 0;
             }
 //            printf("Bottom batch %d - %d\n", yBatchStart, yBatchEnd);
         }
 
-        GL_CALL(glScissor(0, yBatchStart, gSettings.winWidth / gRes, yBatchEnd - yBatchStart));
+        GL_CALL(glScissor(0, yBatchStart, gSettings.winWidth, (yBatchEnd - yBatchStart)));
         GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 6));
         GL_CALL(glFinish());
         GL_CALL(glDisable(GL_SCISSOR_TEST));
@@ -199,7 +200,7 @@ bool Mset::iterate()
             gDrawnBottom = yBatchStart;
         if (gDrawnTop == -1 || yBatchEnd > gDrawnTop)
             gDrawnTop = yBatchEnd;
-        gDrawnPoints += (yBatchEnd - yBatchStart) * gSettings.winWidth / gRes;
+        gDrawnPoints += (yBatchEnd - yBatchStart) * gSettings.winWidth;
 
         _ftime(&endTime);
         endTime.time -= startTime.time;

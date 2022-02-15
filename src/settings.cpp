@@ -85,7 +85,7 @@ bool Settings::load (const char* filename)
     if (itr != settingsDoc.MemberEnd())
         hueScale = itr->value.GetDouble();
 
-/*    itr = settingsDoc.FindMember("winwidth");
+    itr = settingsDoc.FindMember("winwidth");
     if (itr != settingsDoc.MemberEnd())
     {
         winWidth = itr->value.GetInt();
@@ -97,7 +97,7 @@ bool Settings::load (const char* filename)
     {
         winHeight = itr->value.GetInt();
 //        scalei = scaler.mul(Quad((double)winHeight/ winWidth));
-    } */
+    }
 
     itr = settingsDoc.FindMember("r");
     if (itr != settingsDoc.MemberEnd())
