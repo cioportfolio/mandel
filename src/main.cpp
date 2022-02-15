@@ -305,7 +305,7 @@ void handleMouse(SDL_Event e)
 			int x = 0, y = 0;
 			SDL_GetMouseState(&x, &y);
 			gM.shift(x - gSettings.winWidth / 2, gSettings.winHeight - y - gSettings.winHeight / 2);
-			SDL_WarpMouseInWindow(gGLWindow, gSettings.winWidth / 2, gSettings.winHeight / 2);
+			SDL_WarpMouseInWindow(gGLWindow, gSettings.winWidth / 2, gSettings.winHeight - gSettings.winHeight / 2);
 			if (dir > 0.0) {
 				gM.zoomIn();
 			}
@@ -374,14 +374,14 @@ double findBase(double start, double end, int steps)
 
 void movReset()
 {
-	gMovZoomFact = findBase(gSettings.movZoomStart, gSettings.movZoomEnd, gSettings.movFrames);
+	gMovZoomFact = (gSettings.movZoomEnd - gSettings.movZoomStart) / gSettings.movFrames;
 	gMovHueFact = findBase(gSettings.movHueScaleStart, gSettings.movHueScaleEnd, gSettings.movFrames);
 	gMovThreshFact = findBase(gSettings.movThreshStart, gSettings.movThreshEnd, gSettings.movFrames);
 }
 
 void movSetFrame(int f)
 {
-	gSettings.scaler = Quad(gSettings.movZoomStart).mul(Quad(pow(gMovZoomFact, f)));
+	gSettings.zoomExp = gSettings.movZoomStart + gMovZoomFact * f;
 	gSettings.hueScale = gSettings.movHueScaleStart * pow(gMovHueFact, f);
 	gSettings.thresh = gSettings.movThreshStart * pow(gMovThreshFact, f);
 }
@@ -486,11 +486,8 @@ void imGuiFrame()
 			gM.restart();
 			gM.iterate();
 		}
-		float z = 1.0/(float)gSettings.scaler.h;
-		if (ImGui::SliderFloat("Zoom", &z, 1, 1e30, "%e", ImGuiSliderFlags_Logarithmic))
+		if (ImGui::SliderFloat("Zoom", &gSettings.zoomExp, 0, 30, "%e"))
 		{
-			gSettings.scaler = Quad(1.0/z);
-//			gSettings.scalei = gSettings.scaler.mul(Quad((double)gSettings.winHeight / gSettings.winWidth));
 			gM.restart();
 			gM.iterate();
 		}
@@ -532,7 +529,7 @@ void imGuiFrame()
 			}
 			if (ImGui::Button("Set Start"))
 			{
-				gSettings.movZoomStart = gSettings.scaler.h;
+				gSettings.movZoomStart = gSettings.zoomExp;
 				gSettings.movHueScaleStart = gSettings.hueScale;
 				gSettings.movThreshStart = gSettings.thresh;
 				movReset();
@@ -540,7 +537,7 @@ void imGuiFrame()
 			ImGui::SameLine();
 			if (ImGui::Button("Set End"))
 			{
-				gSettings.movZoomEnd = gSettings.scaler.h;
+				gSettings.movZoomEnd = gSettings.zoomExp;
 				gSettings.movHueScaleEnd = gSettings.hueScale;
 				gSettings.movThreshEnd = gSettings.thresh;
 				movReset();
@@ -604,7 +601,7 @@ void imGuiFrame()
 			ImGui::InputDouble("Hue Step", &gSettings.hueStep);
 			if (ImGui::InputFloat("Quad zoom level", &gSettings.quadZoom, 0, 0, "%e"))
 			{
-				bool highPrec = (gSettings.scaler.h < gSettings.quadZoom);
+				bool highPrec = (pow(2.0, - gSettings.zoomExp) < gSettings.quadZoom);
 				if (highPrec != (gM.gPrecision == 1))
 				{
 					gM.restart();

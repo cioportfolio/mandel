@@ -114,9 +114,7 @@ bool Settings::load (const char* filename)
     itr = settingsDoc.FindMember("scale");
     if (itr != settingsDoc.MemberEnd())
     {
-        scaler = Quad(itr->value.GetDouble());
- //       scalei = scaler.mul(Quad((double)winHeight/ winWidth, 0.));
-
+        zoomExp = -log2(itr->value.GetDouble());
     }
 
     itr = settingsDoc.FindMember("lowshader");
@@ -189,7 +187,7 @@ bool Settings::save (const char* filename)
     fs<<"\"highshader\": \""<<highShader<<"\","<<std::endl;
     fs<<"\"r\": "<<centrer.h<<","<<std::endl;
     fs<<"\"i\": "<<centrei.h<<","<<std::endl;
-    fs<<"\"scale\": "<<scaler.h<<","<<std::endl;
+    fs<<"\"scale\": "<<pow(2.0, -zoomExp) << "," << std::endl;
     fs << "\"movzoomstart\": " << movZoomStart << "," << std::endl;
     fs << "\"movzoomend\": " << movZoomEnd << "," << std::endl;
     fs << "\"movframes\": " << movFrames << "," << std::endl;

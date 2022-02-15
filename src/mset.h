@@ -79,8 +79,10 @@ private:
     Quad bottom = Quad(0.0);
     Quad left = Quad(0.0);
     Quad step = Quad(0, 0);
-
-    float gZoomExp = 0.0;
+    
+    float gTextZoomExp = 0.0;
+    float gPaintZoom = 0.0;
+    double gScaler = 0.0;
 
     int gDrawnPoints = 0;
     int gNoPoints = 1;

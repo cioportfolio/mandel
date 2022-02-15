@@ -8,11 +8,13 @@
 
 bool Mset::zoomIn()
 {
-    float lastZoom = gZoomExp;
-    gZoomExp += gSettings.zoomFraction;
-    gSettings.scaler = Quad(pow(2.0, -gZoomExp));
-    if (floor(lastZoom) != floor(gZoomExp))
+    float lastZoom = gTextZoomExp;
+    gSettings.zoomExp += gSettings.zoomFraction;
+    gTextZoomExp = floor(gSettings.zoomExp);
+    gPaintZoom = pow(2.0, gSettings.zoomExp - gTextZoomExp);
+    if (lastZoom != gTextZoomExp)
     {
+
         restart();
         iterate();
     }
@@ -21,10 +23,11 @@ bool Mset::zoomIn()
 
 bool Mset::zoomOut()
 {
-    float lastZoom = gZoomExp;
-    gZoomExp -= gSettings.zoomFraction;
-    gSettings.scaler = Quad(pow(2.0, -gZoomExp));
-    if (floor(lastZoom) != floor(gZoomExp))
+    float lastZoom = gTextZoomExp;
+    gSettings.zoomExp -= gSettings.zoomFraction;
+    gTextZoomExp = floor(gSettings.zoomExp);
+    gPaintZoom = pow(2.0, gSettings.zoomExp - gTextZoomExp);
+    if (lastZoom != gTextZoomExp)
     {
         restart();
         iterate();
@@ -36,8 +39,8 @@ bool Mset::shift(int x, int y)
 {
     if (x != 0 || y != 0)
     {
-        gSettings.centrer = gSettings.centrer.add(step.mul(Quad(x)));
-        gSettings.centrei = gSettings.centrei.add(step.mul(Quad(y)));
+        gSettings.centrer = gSettings.centrer.add(step.mul(Quad(x/gPaintZoom)));
+        gSettings.centrei = gSettings.centrei.add(step.mul(Quad(y/gPaintZoom)));
         restart();
         iterate();
     }
@@ -67,12 +70,14 @@ bool Mset::restart(int r)
         GL_CALL(glClearBufferiv(GL_COLOR, 0, gTexEmpty));
     }
 
-    gM.gPrecision = (gSettings.scaler.h < gSettings.quadZoom);
+    gTextZoomExp = floor(gSettings.zoomExp);
+    gPaintZoom = pow(2.0, gSettings.zoomExp - gTextZoomExp);
+    gScaler = pow(2.0, -gTextZoomExp);
+    gM.gPrecision = (gScaler < gSettings.quadZoom);
 
-    gZoomExp = -log2(gSettings.scaler.h);
-    bottom = gSettings.centrei.add(gSettings.scalei().mul(Quad(-1.0)));
-    left = gSettings.centrer.add(gSettings.scaler.mul(Quad(-1.0)));
-    step = Quad(pow(2.0, -floor(gZoomExp))).mul(Quad(2.0 / gSettings.winWidth));
+    bottom = gSettings.centrei.add(Quad(-gScaler * gSettings.winHeight / gSettings.winWidth));
+    left = gSettings.centrer.add(Quad(-gScaler));
+    step = Quad(gScaler).mul(Quad(2.0 / gSettings.winWidth));
 
     return true;
 }
@@ -224,10 +229,9 @@ void Mset::paint()
     GL_CALL(glUseProgram(gScreenPID));
 
     int paintRes = gDrawnPoints < gNoPoints ? gRes : gPrevRes;
-    float zoom = pow(2.0, gZoomExp - floor(gZoomExp));
     GL_CALL(glUniform4i(gScrParamLocation, gSettings.thresh, paintRes, gSettings.winWidth, gSettings.winHeight));
     GL_CALL(glUniform2f(gColMapLocation, gSettings.baseHue, gSettings.hueScale));
-    GL_CALL(glUniform1f(gPaintZoomLocation, zoom));
+    GL_CALL(glUniform1f(gPaintZoomLocation, gPaintZoom));
     
     GL_CALL(glViewport(0, 0, gSettings.winWidth, gSettings.winHeight));
 

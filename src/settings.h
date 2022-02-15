@@ -30,11 +30,7 @@ public:
 
     Quad centrer = Quad(-0.5);
     Quad centrei = Quad(0.0);
-    Quad scaler = Quad(1.0);
-    Quad scalei()
-    {
-        return scaler.mul(Quad((double)winHeight / winWidth));
-    }
+    float zoomExp = 0.0;
 
     std::string lowShader = "";
     std::string highShader = "";
