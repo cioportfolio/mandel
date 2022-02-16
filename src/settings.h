@@ -43,6 +43,5 @@ public:
     int movFrames = 100;
     float movHueScaleStart = 2.0 / 3.0;
     float movHueScaleEnd = 2.0;
-    int movThreshStart = 1000;
-    int movThreshEnd = 10000;
+    int movThresh = 1000;
 };

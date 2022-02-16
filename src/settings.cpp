@@ -145,13 +145,9 @@ bool Settings::load (const char* filename)
     if (itr != settingsDoc.MemberEnd())
         movHueScaleEnd = itr->value.GetFloat();
 
-    itr = settingsDoc.FindMember("movthreshstart");
+    itr = settingsDoc.FindMember("movthresh");
     if (itr != settingsDoc.MemberEnd())
-        movThreshStart = itr->value.GetInt();
-
-    itr = settingsDoc.FindMember("movthreshend");
-    if (itr != settingsDoc.MemberEnd())
-        movThreshEnd = itr->value.GetInt();
+        movThresh = itr->value.GetInt();
 
     return true;
 }
@@ -193,8 +189,7 @@ bool Settings::save (const char* filename)
     fs << "\"movframes\": " << movFrames << "," << std::endl;
     fs << "\"movhuescalestart\": " << movHueScaleStart << "," << std::endl;
     fs << "\"movhuescaleend\": " << movHueScaleEnd << "," << std::endl;
-    fs << "\"movthreshstart\": " << movThreshStart << "," << std::endl;
-    fs << "\"movthreshend\": " << movThreshEnd << std::endl;
+    fs << "\"movthresh\": " << movThresh << std::endl;
     fs<<"}"<<std::endl;
     fs.close();
     return true;

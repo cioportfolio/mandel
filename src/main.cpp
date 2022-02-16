@@ -240,9 +240,10 @@ void handleKeys(SDL_Keysym key)
 			render();
 		}
 		break;
-	case SDLK_TAB:
+/*	case SDLK_TAB:
 		gM.iterate();
 		render();
+		break; */
 	}
 }
 
@@ -362,7 +363,6 @@ bool gMovBounce = true;
 int gMovFrame = 0;
 double gMovZoomFact = 1.0;
 double gMovHueFact = 1.0;
-double gMovThreshFact = 1.0;
 char gMovFile[50] = "movie/frame";
 bool gMovGen = false;
 char gSettingsFile[50] = "res/newsettings.json";
@@ -379,14 +379,13 @@ void movReset()
 {
 	gMovZoomFact = (gSettings.movZoomEnd - gSettings.movZoomStart) / gSettings.movFrames;
 	gMovHueFact = findBase(gSettings.movHueScaleStart, gSettings.movHueScaleEnd, gSettings.movFrames);
-	gMovThreshFact = findBase(gSettings.movThreshStart, gSettings.movThreshEnd, gSettings.movFrames);
 }
 
 void movSetFrame(int f)
 {
 	gSettings.zoomExp = gSettings.movZoomStart + gMovZoomFact * f;
 	gSettings.hueScale = gSettings.movHueScaleStart * pow(gMovHueFact, f);
-	gSettings.thresh = gSettings.movThreshStart * pow(gMovThreshFact, f);
+	gSettings.thresh = gSettings.movThresh;
 }
 
 void movNextFrame() {
@@ -396,8 +395,7 @@ void movNextFrame() {
 		{
 			gMovFrame++;
 			movSetFrame(gMovFrame);
-			int r = gMovGen ? 1 : gSettings.minRes;
-			gM.restart(r);
+			gM.zoomIn(gSettings.zoomExp);
 			gM.iterate();
 		}
 		else
@@ -423,8 +421,7 @@ void movNextFrame() {
 		{
 			gMovFrame--;
 			movSetFrame(gMovFrame);
-			int r = gMovGen ? 1 : gSettings.minRes;
-			gM.restart(r);
+			gM.zoomOut(gSettings.zoomExp);
 			gM.iterate();
 		}
 		else
@@ -490,9 +487,10 @@ void imGuiFrame()
 			gM.iterate();
 		}
 		ImGui::Text("Scale %e", pow(2.0, -gSettings.zoomExp));
-		if (ImGui::SliderFloat("Zoom", &gSettings.zoomExp, 0, 100, "%.1f"))
+		float z = gSettings.zoomExp;
+		if (ImGui::SliderFloat("Zoom", &z, 0, 100, "%.1f"))
 		{
-			gM.restart();
+			gM.zoomIn(z);
 			gM.iterate();
 		}
 		ImGui::PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(gSettings.baseHue, 0.8, 0.8));
@@ -519,10 +517,13 @@ void imGuiFrame()
 		{
 			if (ImGui::Checkbox("Play", &gMovPlaying))
 			{
-				movReset();
-				movSetFrame(gMovFrame);
-				gM.restart();
-				gM.iterate();
+				if (gMovPlaying)
+				{
+					movReset();
+					movSetFrame(gMovFrame);
+					gM.restart();
+					gM.iterate();
+				}
 			}
 			if (ImGui::SliderInt("Frame", &gMovFrame, 0, gSettings.movFrames))
 			{
@@ -535,7 +536,7 @@ void imGuiFrame()
 			{
 				gSettings.movZoomStart = gSettings.zoomExp;
 				gSettings.movHueScaleStart = gSettings.hueScale;
-				gSettings.movThreshStart = gSettings.thresh;
+				gSettings.movThresh = gSettings.thresh;
 				movReset();
 			}
 			ImGui::SameLine();
@@ -543,7 +544,7 @@ void imGuiFrame()
 			{
 				gSettings.movZoomEnd = gSettings.zoomExp;
 				gSettings.movHueScaleEnd = gSettings.hueScale;
-				gSettings.movThreshEnd = gSettings.thresh;
+				gSettings.movThresh = gSettings.thresh;
 				movReset();
 			}
 			if (ImGui::SliderInt("Frames", &gSettings.movFrames, 1, 1000 - 1))
@@ -564,11 +565,8 @@ void imGuiFrame()
 				gSettings.movHueScaleEnd = h[1];
 				movReset();
 			}
-			float t[2] = { gSettings.movThreshStart, gSettings.movThreshEnd };
-			if (ImGui::SliderFloat2("Threshold", t, gSettings.minThresh, gSettings.maxThresh, "%d", ImGuiSliderFlags_Logarithmic))
+			if (ImGui::SliderInt("Threshold", &gSettings.movThresh, gSettings.minThresh, gSettings.maxThresh, "%d", ImGuiSliderFlags_Logarithmic))
 			{
-				gSettings.movThreshStart = t[0];
-				gSettings.movThreshEnd = t[1];
 				movReset();
 			}
 			ImGui::Checkbox("Loop", &gMovLoop);

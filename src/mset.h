@@ -22,8 +22,8 @@ public:
     bool restart(int r = gSettings.minRes);
     bool iterate();
     bool iterating();
-    bool zoomIn();
-    bool zoomOut();
+    bool zoomIn(float ze = gSettings.zoomExp + gSettings.zoomFraction);
+    bool zoomOut(float ze = gSettings.zoomExp - gSettings.zoomFraction);
     bool shift(int x, int y);
     void paint();
     void close();

@@ -6,13 +6,15 @@
 #include <time.h>
 #include <sys/timeb.h>
 
-bool Mset::zoomIn()
+bool Mset::zoomIn(float newZoom)
 {
     float lastZoom = gTextZoomExp;
-    gSettings.zoomExp += gSettings.zoomFraction;
+    gSettings.zoomExp = newZoom;
     gTextZoomExp = floor(gSettings.zoomExp);
     gPaintZoom = pow(2.0, gSettings.zoomExp - gTextZoomExp);
-    if (lastZoom != gTextZoomExp)
+    if (lastZoom > gTextZoomExp)
+        zoomOut(newZoom);
+    else if (lastZoom != gTextZoomExp)
     {
         gTargetTexture = 1 - gTargetTexture;
         GL_CALL(glBindTexture(GL_TEXTURE_2D, gTexture[gTargetTexture]));
@@ -54,13 +56,15 @@ bool Mset::zoomIn()
     return true;
 }
 
-bool Mset::zoomOut()
+bool Mset::zoomOut(float newZoom)
 {
     float lastZoom = gTextZoomExp;
-    gSettings.zoomExp -= gSettings.zoomFraction;
+    gSettings.zoomExp = newZoom;
     gTextZoomExp = floor(gSettings.zoomExp);
     gPaintZoom = pow(2.0, gSettings.zoomExp - gTextZoomExp);
-    if (lastZoom != gTextZoomExp)
+    if (lastZoom < gTextZoomExp)
+        zoomIn(newZoom);
+    else if (lastZoom != gTextZoomExp)
     {
         gTargetTexture = 1 - gTargetTexture;
         GL_CALL(glBindTexture(GL_TEXTURE_2D, gTexture[gTargetTexture]));
