@@ -1,0 +1,131 @@
+#version 410 core
+#pragma optionNV(fastmath off)
+#pragma optionNV(fastprecision off)
+
+in vec2 fUV;
+
+out int itCount;
+
+uniform isampler2D inTex;
+
+uniform dvec4 bottomLeft;
+uniform dvec2 step;
+uniform ivec4 params;
+
+int maxI = params.x;
+int width = params.y;
+int height = params.z;
+int res = params.w;
+
+dvec2 quadadd (dvec2 dsa, dvec2 dsb)
+{
+	dvec2 dsc;
+	double t1, t2, e;
+
+	t1 = dsa.x + dsb.x;
+	e = t1 - dsa.x;
+	t2 = ((dsb.x - e) + (dsa.x - (t1 - e))) + dsa.y + dsb.y;
+
+	dsc.x = t1 + t2;
+	dsc.y = t2 - (dsc.x - t1);
+	return dsc;
+}
+
+dvec2 quadmul (dvec2 dsa, dvec2 dsb)
+{
+	dvec2 dsc;
+	double c11, c21, c2, e, t1, t2;
+	double a1, a2, b1, b2, cona, conb, split = 536870913.;
+
+	cona = dsa.x * split;
+	conb = dsb.x * split;
+	a1 = cona - (cona - dsa.x);
+	b1 = conb - (conb - dsb.x);
+	a2 = dsa.x - a1;
+	b2 = dsb.x - b1;
+
+	c11 = dsa.x * dsb.x;
+	c21 = a2 * b2 + (a2 * b1 + (a1 * b2 + (a1 * b1 - c11)));
+
+	c2 = dsa.x * dsb.y + dsa.y * dsb.x;
+
+	t1 = c11 + c2;
+	e = t1 - c11;
+	t2 = dsa.y * dsb.y + ((c2 - e) + (c11 - (t1 - e))) + c21;
+
+	dsc.x = t1 + t2;
+	dsc.y = t2 - (dsc.x - t1);
+
+	return dsc;
+}
+					
+void main()
+{
+	ivec2 point = ivec2(floor(gl_FragCoord.x), floor(gl_FragCoord.y));
+	int ic = texelFetch( inTex, point, 0).r;
+	if (mod(point.x, res) == 0 && mod(point.y, res) == 0 && ic == -1)
+	{
+		ivec2 parent = point/res/2 * res * 2;
+		ic = texelFetch( inTex, parent, 0).r;
+
+		if (mod(gl_FragCoord.x, 2.0 * res) != 0.0 || mod(gl_FragCoord.y, 2.0 * res) != 0.0 || ic == -1)
+		{
+			bool same = true;
+			if (ic > -1)
+			{
+				for (int x = -2; x <3 && same; x++)
+				{
+					if (parent.x + x * res * 2 >= 0 && parent.x + x * res * 2 < width)
+					{
+						for (int y = -2; y<3 && same; y++)
+						{
+							if (parent.y + y * res * 2 >= 0 && parent.y + y * res * 2 < width && (x != 0 || y != 0))
+							{
+								if (texelFetch( inTex, ivec2(parent.x + x * res * 2, parent.y + y * res * 2), 0).r != ic)
+								{
+									same = false;
+								}
+							}
+						}
+					}
+				}
+			}
+			else
+			{
+				same = false;
+			}
+			if (!same || ic == -1)
+			{
+				dvec2 qU = dvec2(point.x, 0.0);
+				dvec2 qV = dvec2(point.y, 0.0);
+
+				dvec2 cr = quadadd(bottomLeft.xy,quadmul(qU,step.xy));
+				dvec2 ci = quadadd(bottomLeft.zw,quadmul(qV,step.xy));
+
+				dvec2 zr = dvec2(0.0,0.0);
+				dvec2 zi = dvec2(0.0,0.0);
+				dvec2 q2 = dvec2(2.0,0.0);
+
+				dvec2 mag, zr2, zi2;
+
+				ic = 0;
+				for (int i=0;i<maxI;i++) {
+					zr2 = quadmul(zr,zr);
+					zi2 = quadmul(zi,zi);
+					mag = quadadd(zr2,zi2);
+					if (mag.x > 4.0) {
+						ic = i;	
+						break;
+					}
+					zi = quadadd(quadmul(quadmul(zi, zr), q2), ci);
+					zr = quadadd(quadadd(zr2, -zi2), cr);
+				}
+			}
+		}
+	}
+	else
+	{
+		ic = texelFetch( inTex, point, 0).r;
+	}
+	itCount = ic;
+}

@@ -12,7 +12,7 @@
 "winwidth": 1024,
 "winheight": 1024,
 "lowshader": "res/shaders/calcfragmentdouble.txt",
-"highshader": "res/shaders/calcfragmentdouble.txt",
+"highshader": "res/shaders/calcfragmentquad.txt",
 "r": -0.5,
 "i": 0,
 "scale": 1,
