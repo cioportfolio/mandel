@@ -42,7 +42,9 @@ void main(){
 
     // Output color = color of the texture at the specified UV
     int itCount = texelFetch(tex, UV, 0).r;
-    vec3 c = vec3(0.1,0.0,0.1);
+    vec3 c = vec3(0.3,0.3,0.0);
+    if (itCount == -1)
+        c = vec3(0.3,0.0,0.3);
     if (itCount == 0)
         c = vec3(0.0,0.0, 0.0);
     if (itCount >= 1)

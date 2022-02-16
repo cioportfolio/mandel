@@ -240,6 +240,9 @@ void handleKeys(SDL_Keysym key)
 			render();
 		}
 		break;
+	case SDLK_TAB:
+		gM.iterate();
+		render();
 	}
 }
 

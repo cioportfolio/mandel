@@ -14,9 +14,42 @@ bool Mset::zoomIn()
     gPaintZoom = pow(2.0, gSettings.zoomExp - gTextZoomExp);
     if (lastZoom != gTextZoomExp)
     {
+        gTargetTexture = 1 - gTargetTexture;
+        GL_CALL(glBindTexture(GL_TEXTURE_2D, gTexture[gTargetTexture]));
+        GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, gSettings.winWidth, gSettings.winHeight, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, 0));
+        GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, gTextureFrameBuffer));
+        GL_CALL(glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, gTexture[gTargetTexture], 0));
+        GL_CALL(glDrawBuffers(1, gTextureDrawBuffers));
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            printf("Framebuffer not complete at line %i\n", __LINE__);
 
-        restart();
-        iterate();
+        GL_CALL(glBindVertexArray(gGenericVertexArray));
+
+        GL_CALL(glUseProgram(gTexPassPID));
+        GL_CALL(glUniform4i(gPassParamsLocation, gSettings.winWidth/4, gSettings.winHeight/4, 2, 1));
+
+        GL_CALL(glActiveTexture(GL_TEXTURE0));
+        GL_CALL(glBindTexture(GL_TEXTURE_2D, gTexture[1 - gTargetTexture]));
+
+        GL_CALL(glViewport(0, 0, gSettings.winWidth, gSettings.winHeight));
+        GL_CALL(glClearBufferiv(GL_COLOR, 0, gTexEmpty));
+        GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 6));
+
+        gRes = gRes * 2;
+        gPrevRes = gRes * 2;
+        gDrawnPoints = 1;
+        gNoPoints = 1;
+        gDrawnTop = -1;
+        gDrawnBottom = -1;
+        gDrawnLeft = -1;
+        gDrawnRight = -1;
+//        tuneBatch();
+        gScaler = pow(2.0, -gTextZoomExp);
+        gM.gPrecision = (gScaler < gSettings.quadZoom);
+
+        bottom = gSettings.centrei.add(Quad(-gScaler * gSettings.winHeight / gSettings.winWidth));
+        left = gSettings.centrer.add(Quad(-gScaler));
+        step = Quad(gScaler).mul(Quad(2.0 / gSettings.winWidth));
     }
     return true;
 }
@@ -29,20 +62,103 @@ bool Mset::zoomOut()
     gPaintZoom = pow(2.0, gSettings.zoomExp - gTextZoomExp);
     if (lastZoom != gTextZoomExp)
     {
-        restart();
-        iterate();
+        gTargetTexture = 1 - gTargetTexture;
+        GL_CALL(glBindTexture(GL_TEXTURE_2D, gTexture[gTargetTexture]));
+        GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, gSettings.winWidth, gSettings.winHeight, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, 0));
+        GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, gTextureFrameBuffer));
+        GL_CALL(glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, gTexture[gTargetTexture], 0));
+        GL_CALL(glDrawBuffers(1, gTextureDrawBuffers));
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            printf("Framebuffer not complete at line %i\n", __LINE__);
+
+        GL_CALL(glBindVertexArray(gGenericVertexArray));
+
+        GL_CALL(glUseProgram(gTexPassPID));
+        GL_CALL(glUniform4i(gPassParamsLocation, -gSettings.winWidth / 2, -gSettings.winHeight / 2, 1, 2));
+
+        GL_CALL(glActiveTexture(GL_TEXTURE0));
+        GL_CALL(glBindTexture(GL_TEXTURE_2D, gTexture[1 - gTargetTexture]));
+
+        GL_CALL(glViewport(0, 0, gSettings.winWidth, gSettings.winHeight));
+        GL_CALL(glClearBufferiv(GL_COLOR, 0, gTexEmpty));
+        GL_CALL(glEnable(GL_SCISSOR_TEST));
+        GL_CALL(glScissor(gSettings.winWidth / 4, gSettings.winHeight / 4, gSettings.winWidth / 2, gSettings.winHeight/2));
+        GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 6));
+        GL_CALL(glDisable(GL_SCISSOR_TEST));
+
+        gRes = gSettings.minRes;
+        gPrevRes = gRes * 2;
+        gDrawnPoints = 1;
+        gNoPoints = 1;
+        gDrawnTop = -1;
+        gDrawnBottom = -1;
+        gDrawnLeft = -1;
+        gDrawnRight = -1;
+//        tuneBatch();
+        gScaler = pow(2.0, -gTextZoomExp);
+        gM.gPrecision = (gScaler < gSettings.quadZoom);
+
+        bottom = gSettings.centrei.add(Quad(-gScaler * gSettings.winHeight / gSettings.winWidth));
+        left = gSettings.centrer.add(Quad(-gScaler));
+        step = Quad(gScaler).mul(Quad(2.0 / gSettings.winWidth));
     }
     return true;
 }
 
 bool Mset::shift(int x, int y)
 {
-    if (x != 0 || y != 0)
+    int textMoveX = x / gPaintZoom;
+    int textMoveY = y / gPaintZoom;
+    if (textMoveX != 0 || textMoveY != 0)
     {
-        gSettings.centrer = gSettings.centrer.add(step.mul(Quad(x/gPaintZoom)));
-        gSettings.centrei = gSettings.centrei.add(step.mul(Quad(y/gPaintZoom)));
-        restart();
-        iterate();
+
+        gSettings.centrer = gSettings.centrer.add(step.mul(Quad(textMoveX)));
+        gSettings.centrei = gSettings.centrei.add(step.mul(Quad(textMoveY)));
+        gTargetTexture = 1 - gTargetTexture;
+        GL_CALL(glBindTexture(GL_TEXTURE_2D, gTexture[gTargetTexture]));
+        GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, gSettings.winWidth, gSettings.winHeight, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, 0));
+        GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, gTextureFrameBuffer));
+        GL_CALL(glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, gTexture[gTargetTexture], 0));
+        GL_CALL(glDrawBuffers(1, gTextureDrawBuffers));
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            printf("Framebuffer not complete at line %i\n", __LINE__);
+
+        GL_CALL(glBindVertexArray(gGenericVertexArray));
+
+        GL_CALL(glUseProgram(gTexPassPID));
+        GL_CALL(glUniform4i(gPassParamsLocation, textMoveX, textMoveY, 1, 1));
+
+        GL_CALL(glActiveTexture(GL_TEXTURE0));
+        GL_CALL(glBindTexture(GL_TEXTURE_2D, gTexture[1 - gTargetTexture]));
+
+        GL_CALL(glViewport(0, 0, gSettings.winWidth, gSettings.winHeight));
+        GL_CALL(glClearBufferiv(GL_COLOR, 0, gTexEmpty));
+        GL_CALL(glEnable(GL_SCISSOR_TEST));
+        int sx = textMoveX < 0? -textMoveX: 0;
+        int sy = textMoveY < 0? -textMoveY: 0;
+        int sw = gSettings.winWidth - (textMoveX < 0? -textMoveX: textMoveX);
+        int sh = gSettings.winHeight - (textMoveY < 0? -textMoveY: textMoveY);
+        GL_CALL(glScissor(sx,sy,sw,sh));
+
+        GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 6));
+        GL_CALL(glDisable(GL_SCISSOR_TEST));
+
+        gRes = gSettings.minRes;
+        gPrevRes = gRes * 2;
+        gDrawnPoints = 1;
+        gNoPoints = 1;
+        gDrawnTop = -1;
+        gDrawnBottom = -1;
+        gDrawnLeft = -1;
+        gDrawnRight = -1;
+//        tuneBatch();
+        gScaler = pow(2.0, -gTextZoomExp);
+        gM.gPrecision = (gScaler < gSettings.quadZoom);
+
+        bottom = gSettings.centrei.add(Quad(-gScaler * gSettings.winHeight / gSettings.winWidth));
+        left = gSettings.centrer.add(Quad(-gScaler));
+        step = Quad(gScaler).mul(Quad(2.0 / gSettings.winWidth));
+
     }
     return true;
 }
@@ -52,8 +168,8 @@ bool Mset::restart(int r)
     if (!gInitialised) return false;
     gRes = r;
     gPrevRes = gRes*2;
-    gDrawnPoints=0;
-    gNoPoints = 0;
+    gDrawnPoints=1;
+    gNoPoints = 1;
     gDrawnTop = -1;
     gDrawnBottom = -1;
     gDrawnLeft = -1;

@@ -8,14 +8,17 @@ uniform isampler2D inTex;
 
 uniform ivec4 params;
 ivec2 offset = params.xy;
-int scaleNom = params.z;
-int scaleDen = params.w;
+int res = params.z;
+int scale = params.w;
 
 void main()
 {
+	int ic = -1;
 	ivec2 dest = ivec2(floor(gl_FragCoord.x), floor(gl_FragCoord.y));
-	ivec2 source = ivec2(dest.x*scaleNom/scaleDen+offset.x, dest.y*scaleNom/scaleDen+offset.y);
-	int ic = texelFetch( inTex, source, 0).r;
-
+	if (mod(dest.x, res) == 0 && mod(dest.y, res) == 0)
+	{
+		ivec2 source = ivec2(dest.x/res*scale+offset.x, dest.y/res*scale+offset.y);
+		ic = texelFetch( inTex, source, 0).r;
+	}
 	itCount = ic;
 }
