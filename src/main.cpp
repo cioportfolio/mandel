@@ -682,7 +682,7 @@ int main(int argc, char *args[])
 				}
 				else if (gMovGen) {
 					char frameFileName[55];
-					sprintf(frameFileName, "%s%04d.jpg", gMovFile, gMovFrame);
+					sprintf(frameFileName, "%s%d%04d.jpg", gMovFile, gMovForward ? 0:1, gMovFrame);
 					gM.saveFrame(frameFileName);
 					movNextFrame();
 				}
