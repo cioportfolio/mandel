@@ -16,8 +16,6 @@
 
 #include "globals.h"
 
-#define POINT_SCALE 1
-
 bool handleWindow(SDL_WindowEvent w);
 
 //Input handler
