@@ -4,4 +4,4 @@ ffmpeg -r 25 -i C:\dev\mandel\movie\frame%04d.jpg -c:v libx264 -preset slow -crf
 
 Example movie:
 
-![Example mandelbrot zoom movie](https://drive.google.com/file/d/1G8vEifFbt_6SvWcWZx_0-mFQJFBpA8v3/view?usp=sharing)
+![Example mandelbrot zoom movie](https://drive.google.com/file/d/1AMVITnDhYlRfh6JMHcJb_2EYI1koQUDb/view?usp=drive_link)
