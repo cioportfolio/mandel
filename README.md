@@ -88,4 +88,4 @@ Use the <kbd>Movie</kbd> menu to set the start and end parameters and number of 
 ```bash
 ffmpeg -r 25 -i <mandel path>\movie\frame%04d.jpg -c:v libx264 -preset slow -crf 18 <mandel path>\movie\zoom.mp4
 ```
-[Example movie](https://drive.google.com/file/d/1AMVITnDhYlRfh6JMHcJb_2EYI1koQUDb/preview)
+[Example movie](https://www.youtube.com/watch?v=6VFyIEjJ64w)
