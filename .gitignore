@@ -3,3 +3,4 @@ bin/
 dependencies/
 vendor/
 movie/
+imgui.ini
