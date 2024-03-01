@@ -9,20 +9,23 @@ mandel\
   res\
   src\
   vendor\
-    glm # from https://github.com/g-truc/glm
-    imgui # from https://github.com/ocornut/imgui/wiki
-    rapidjson # from https://rapidjson.org/
+    glm # Download from https://github.com/g-truc/glm, unpack the zip and copy the glm sub-folder here
+    imgui # Download from from https://github.com/ocornut/imgui/wiki, unpack the zip and copy the .h and .cpp files to an imgui folder here
+          # Also copy the .h and .cpp files for sld2 and opengl3 (5 files) from the backends folder to the imgui folder here
+    rapidjson # Download from https://rapidjson.org/, unpack the zip and copy the rapidjson subfolder from the include folder to here
     stb\
-      stb_image_write.h # from https://github.com/nothings/stb/blob/master/stb_image_write.h
+      stb_image_write.h # Open the raw version of the file from https://github.com/nothings/stb/blob/master/stb_image_write.h and save to an stb folder here.
   dependencies\
-    glew\ # from https://github.com/nigels-com/glew/blob/master/README.md
+    glew\ # Download the windows 32bit and 64bit binaries from https://github.com/nigels-com/glew/blob/master/README.md, unpack the zip and copy the include and lib folders to a glew folder here
       include\
         GL\
       lib\
         Release\
-    SDL2\ # from https://www.libsdl.org/
+    SDL2\ # Download the "-VC" version from https://www.libsdl.org/, unpack the zip and copy the include and lib folders to a SDL2 folder here
+          # Also copy the \lib\x86 version of the SDL2.dll to the bin folder (where the .exe will be compiled)
       include\
       lib\
+  bin\
 ```
 
 ## Controls
