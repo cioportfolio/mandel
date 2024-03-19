@@ -339,6 +339,7 @@ bool Mset::iterate()
 
 void Mset::paint()
 {
+    
     if (!gInitialised) return;
     GL_CALL(glBindVertexArray(gGenericVertexArray));
 
@@ -357,4 +358,5 @@ void Mset::paint()
     GL_CALL(glViewport(0, 0, gSettings.winWidth, gSettings.winHeight));
 
     GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 2*3));
+ 
 }
