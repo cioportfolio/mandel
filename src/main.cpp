@@ -238,6 +238,34 @@ void handleKeys(SDL_Keysym key)
 			render();
 		}
 		break;
+	case SDLK_p:
+		if (gM.getState() == STATE_JULIA) {
+			gM.offsetJulia(0.01);
+			gM.restart();
+			gM.iterate();
+			render();
+		}
+		break;
+	case SDLK_o:
+		if (gM.getState() == STATE_JULIA) {
+			gM.offsetJulia(-0.01);
+			gM.restart();
+			gM.iterate();
+			render();
+		}
+		break;
+	case SDLK_j:
+		gM.changeState(STATE_JULIA);
+		gM.restart();
+		gM.iterate();
+		render();
+		break;
+	case SDLK_m:
+		gM.changeState(STATE_MANDEL);
+		gM.restart();
+		gM.iterate();
+		render();
+		break;
 /*	case SDLK_TAB:
 		gM.iterate();
 		render();

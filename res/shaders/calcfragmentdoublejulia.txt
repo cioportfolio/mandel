@@ -1,0 +1,87 @@
+#version 410 core
+
+in vec2 fUV;
+
+out int itCount;
+
+
+uniform isampler2D inTex;
+
+uniform dvec4 bottomLeft;
+uniform dvec2 step;
+uniform ivec4 params;
+uniform double juliaOffset;
+
+
+int maxI = params.x;
+int width = params.y;
+int height = params.z;
+int res = params.w;
+
+
+dvec2 sqr(in dvec2 z){
+	return dvec2(z.x * z.x - z.y * z.y, 2 * z.x * z.y);
+}
+
+double magpow2(in dvec2 z){
+	return z.x * z.x + z.y * z.y;
+}
+
+void main()
+{
+	ivec2 point = ivec2(floor(gl_FragCoord.x), floor(gl_FragCoord.y));
+	int ic = texelFetch( inTex, point, 0).r;
+	if (mod(point.x, res) == 0 && mod(point.y, res) == 0 && ic == -1)
+	{
+		ivec2 parent = point/res/2 * res * 2;
+		ic = texelFetch( inTex, parent, 0).r;
+
+		if (mod(gl_FragCoord.x, 2.0 * res) != 0.0 || mod(gl_FragCoord.y, 2.0 * res) != 0.0 || ic == -1)
+		{
+			bool same = true;
+			if (ic > -1)
+			{
+				for (int x = -2; x <3 && same; x++)
+				{
+					if (parent.x + x * res * 2 >= 0 && parent.x + x * res * 2 < width)
+					{
+						for (int y = -2; y<3 && same; y++)
+						{
+							if (parent.y + y * res * 2 >= 0 && parent.y + y * res * 2 < width && (x != 0 || y != 0))
+							{
+								if (texelFetch( inTex, ivec2(parent.x + x * res * 2, parent.y + y * res * 2), 0).r != ic)
+								{
+									same = false;
+								}
+							}
+						}
+					}
+				}
+			}
+			else
+			{
+				same = false;
+			}
+			if (!same || ic == -1)
+			{
+				dvec2 z = dvec2(point.x * step.x + bottomLeft.x, point.y*step.x+bottomLeft.z);
+				ic = 0;
+				for (int i=0;i<maxI;i++)
+				{
+					if (magpow2(z) > 4)
+					{
+						ic = i;	
+						break;
+					}
+					
+					z = sqr(z)+juliaOffset ;
+				}
+			}
+		}
+	}
+	else
+	{
+		ic = texelFetch( inTex, point, 0).r;
+	}
+	itCount = ic;
+}

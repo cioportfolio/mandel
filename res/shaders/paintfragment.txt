@@ -13,6 +13,7 @@ uniform float zoom;
 uniform vec2 colmap;
 uniform ivec4 params;
 
+
 int maxI = params.x;
 int res = params.y;
 int width = params.z;
@@ -38,8 +39,7 @@ vec3 iter2col(int iter) {
 }
 
 void main(){
-    //ivec2 UV = ivec2(width/2/res + (gl_FragCoord.x - width/2)/res/zoom, height/2/res + (gl_FragCoord.y - height/2)/res/zoom) * res;
-    ivec2 UV = ivec2(width/2 + (gl_FragCoord.x - width/2)/zoom, height/2 + (gl_FragCoord.y - height/2)/zoom);
+    ivec2 UV = ivec2(width/2/res + (gl_FragCoord.x - width/2)/res/zoom, height/2/res + (gl_FragCoord.y - height/2)/res/zoom) * res;
 
     // Output color = color of the texture at the specified UV
     int itCount = texelFetch(tex, UV, 0).r;

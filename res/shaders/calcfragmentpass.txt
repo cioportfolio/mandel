@@ -5,14 +5,18 @@ in vec2 fUV;
 out int itCount;
 
 uniform isampler2D inTex;
-
+uniform double juliaOffset;
 uniform ivec4 params;
 ivec2 offset = params.xy;
+
 int res = params.z;
 int scale = params.w;
 
+
+
 void main()
-{
+{	
+	double w = juliaOffset;
 	int ic = -1;
 	ivec2 dest = ivec2(floor(gl_FragCoord.x), floor(gl_FragCoord.y));
 	if (mod(dest.x, res) == 0 && mod(dest.y, res) == 0)

@@ -34,6 +34,8 @@ public:
 
     std::string lowShader = "";
     std::string highShader = "";
+    std::string lowShaderJulia = "";
+    std::string highShaderJulia = "";
 
     bool load (const char* filename);
     bool save (const char* filename);
