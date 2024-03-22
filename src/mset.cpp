@@ -198,12 +198,22 @@ bool Mset::restart(int r)
         GL_CALL(glClearBufferiv(GL_COLOR, 0, gTexEmpty));
     }
 
+    
+
 
     gTextZoomExp = floor(gSettings.zoomExp);
     gPaintZoom = pow(2.0, gSettings.zoomExp - gTextZoomExp);
     gScaler = pow(2.0, -gTextZoomExp);
     gM.gPrecision = (gScaler < gSettings.quadZoom);
 
+    if (gState == STATE_JULIA) {
+        gSettings.centrer = 0.0;
+        gScaler *= 1.5;
+    }
+    else if (gState == STATE_MANDEL) {
+        gSettings.centrer = -0.5;
+    }
+   
     bottom = gSettings.centrei.add(Quad(-gScaler * gSettings.winHeight / gSettings.winWidth));
     left = gSettings.centrer.add(Quad(-gScaler));
     step = Quad(gScaler).mul(Quad(2.0 / gSettings.winWidth));
@@ -216,7 +226,7 @@ bool Mset::iterating()
     return (gPrevRes > 1 || gDrawnPoints < gNoPoints);
 }
 
-bool Mset::offsetJulia(double offset) {
+bool Mset::offsetJulia(glm::vec2 offset) {
     gJuliaOffset += offset;
     return true;
 }
@@ -297,7 +307,7 @@ bool Mset::iterate()
         }
         else if (gState == STATE_JULIA) {
             GL_CALL(glUseProgram(gTextureJuliaPID[gPrecision]));  
-            GL_CALL(glUniform1d(gJuliaLocation[gPrecision], gJuliaOffset));
+            GL_CALL(glUniform2d(gJuliaLocation[gPrecision], gJuliaOffset.x, gJuliaOffset.y));
             GL_CALL(glUniform4d(gBLLocationJulia[gPrecision], left.h, left.l, bottom.h, bottom.l));
             GL_CALL(glUniform2d(gStepLocationJulia[gPrecision], step.h, step.l));
             GL_CALL(glUniform4i(gParamsLocationJulia[gPrecision], gSettings.thresh, gSettings.winWidth, gSettings.winHeight, gRes));

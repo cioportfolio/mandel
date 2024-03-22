@@ -29,7 +29,7 @@ public:
     bool init();
     bool restart(int r = gSettings.minRes);
     bool iterate();
-    bool offsetJulia(double);
+    bool offsetJulia(glm::vec2);
     bool changeState(State);
     const State getState() const { return gState; }
     bool iterating();
@@ -41,7 +41,7 @@ public:
     void saveFrame(const char* f);
     GLuint LoadShaders(bool feedback, const char* vertex_file_path, const char* fragment_file_path);
     int gPrecision = 0;
-
+    glm::vec2 gJuliaOffset = { -0.618, 0.0 };
     
 
 private:
@@ -103,7 +103,7 @@ private:
     float gTextZoomExp = 0.0;
     float gPaintZoom = 0.0;
     double gScaler = 0.0;
-    double gJuliaOffset = 0.51;
+    
 
     int gDrawnPoints = 0;
     int gNoPoints = 1;

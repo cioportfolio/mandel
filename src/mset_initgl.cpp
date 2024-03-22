@@ -72,7 +72,7 @@ bool Mset::initGL()
         GL_GET_LOCATION(gTextureJuliaPID[i], inTex, gCalcTexLocationJulia[i]);
         //        GL_GET_LOCATION(gTexturePID[i], rect, gCalcRectLocation[i]);
         GL_CALL(glUseProgram(gTextureJuliaPID[i]));
-        GL_CALL(glUniform1d(gJuliaLocation[i], gJuliaOffset));
+        GL_CALL(glUniform2d(gJuliaLocation[i], gJuliaOffset.x,gJuliaOffset.y));
         GL_CALL(glUniform1i(gCalcTexLocationJulia[i], 0));
     }
 

@@ -240,7 +240,7 @@ void handleKeys(SDL_Keysym key)
 		break;
 	case SDLK_p:
 		if (gM.getState() == STATE_JULIA) {
-			gM.offsetJulia(0.01);
+			gM.offsetJulia(glm::vec2{ 0.0,0.1 });
 			gM.restart();
 			gM.iterate();
 			render();
@@ -248,7 +248,23 @@ void handleKeys(SDL_Keysym key)
 		break;
 	case SDLK_o:
 		if (gM.getState() == STATE_JULIA) {
-			gM.offsetJulia(-0.01);
+			gM.offsetJulia(glm::vec2{ 0.0,-0.1 });
+			gM.restart();
+			gM.iterate();
+			render();
+		}
+		break;
+	case SDLK_u:
+		if (gM.getState() == STATE_JULIA) {
+			gM.offsetJulia(glm::vec2{ 0.1,0.0 });
+			gM.restart();
+			gM.iterate();
+			render();
+		}
+		break;
+	case SDLK_i:
+		if (gM.getState() == STATE_JULIA) {
+			gM.offsetJulia(glm::vec2{ -0.1,0.0 });
 			gM.restart();
 			gM.iterate();
 			render();
@@ -539,6 +555,16 @@ void imGuiFrame()
 			gM.iterate();
 		}
 
+		if (ImGui::CollapsingHeader("Julia"))
+		{   
+			glm::vec2 prevOffset = gM.gJuliaOffset;
+			ImGui::SliderFloat("Offset X:", &gM.gJuliaOffset.x,-1.f,1.f);
+			ImGui::SliderFloat("Offset Y:", &gM.gJuliaOffset.y, -1.f, 1.f);
+			if (prevOffset != gM.gJuliaOffset) {
+				gM.restart();
+				gM.iterate();
+			}
+		}
 		if (ImGui::CollapsingHeader("Movie"))
 		{
 			if (ImGui::Checkbox("Play", &gMovPlaying))
