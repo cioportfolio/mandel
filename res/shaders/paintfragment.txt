@@ -13,6 +13,7 @@ uniform float zoom;
 uniform vec2 colmap;
 uniform ivec4 params;
 
+
 int maxI = params.x;
 int res = params.y;
 int width = params.z;

@@ -2,12 +2,20 @@
 
 #define GLEW_STATIC
 #include <GL/glew.h>
+#include <glm/glm.hpp>
 #include "settings.h"
 #include "quad.h"
 
 extern Settings gSettings;
 
 #define GL_CALL(CALL) CALL;checkGLError(__LINE__)
+
+enum State {
+    STATE_NONE,
+    STATE_MANDEL,
+    STATE_JULIA,
+    NUM_STATES
+};
 
 class Mset
 {
@@ -21,6 +29,9 @@ public:
     bool init();
     bool restart(int r = gSettings.minRes);
     bool iterate();
+    bool offsetJulia(glm::vec2);
+    bool changeState(State);
+    const State getState() const { return gState; }
     bool iterating();
     bool zoomIn(float ze = gSettings.zoomExp + gSettings.zoomFraction);
     bool zoomOut(float ze = gSettings.zoomExp - gSettings.zoomFraction);
@@ -30,6 +41,8 @@ public:
     void saveFrame(const char* f);
     GLuint LoadShaders(bool feedback, const char* vertex_file_path, const char* fragment_file_path);
     int gPrecision = 0;
+    glm::vec2 gJuliaOffset = { -0.618, 0.0 };
+    
 
 private:
     void checkGLError(int l);
@@ -47,6 +60,7 @@ private:
     //Graphics program
     GLuint gGenericVertexArray = 0;
     GLuint gTexturePID[2] = { 0,0 };
+    GLuint gTextureJuliaPID[2] = { 0,0 };
     GLuint gScreenPID = 0;
     GLuint gTexPassPID = 0;
     GLint gBLLocation[2] = { -1,-1 };
@@ -59,9 +73,15 @@ private:
     GLint gPassParamsLocation = -1;
     GLint gPaintZoomLocation = -1;
 
+    GLint gJuliaLocation[2] = { -1,-1 };
+    GLint gBLLocationJulia[2] = { -1,-1 };
+    GLint gStepLocationJulia[2] = { -1,-1 };
+    GLint gParamsLocationJulia[2] = { -1,-1 };
+    GLint gCalcTexLocationJulia[2] = { -1,-1 };
+
     GLuint gVertexBufferObject = 0;
     GLuint gTextureFrameBuffer = 0;
-    int gTargetTexture = 0;
+    int gTargetTexture = 1;
     GLuint gTexture[2] = { 0,0 };
     int gPrevRes = 0;
 
@@ -83,8 +103,11 @@ private:
     float gTextZoomExp = 0.0;
     float gPaintZoom = 0.0;
     double gScaler = 0.0;
+    
 
     int gDrawnPoints = 0;
     int gNoPoints = 1;
     int gProgress = 100;
+
+    State gState = STATE_MANDEL;
 };

@@ -14,8 +14,9 @@ bool Mset::zoomIn(float newZoom)
     gPaintZoom = pow(2.0, gSettings.zoomExp - gTextZoomExp);
     if (lastZoom > gTextZoomExp)
         zoomOut(newZoom);
-    else if (lastZoom != gTextZoomExp)
+    else if (lastZoom != gTextZoomExp) //if we have zoomed
     {
+        //swap textures, and set that texture to be rendered to
         gTargetTexture = 1 - gTargetTexture;
         GL_CALL(glBindTexture(GL_TEXTURE_2D, gTexture[gTargetTexture]));
         GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, gSettings.winWidth, gSettings.winHeight, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, 0));
@@ -37,6 +38,7 @@ bool Mset::zoomIn(float newZoom)
         GL_CALL(glClearBufferiv(GL_COLOR, 0, gTexEmpty));
         GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 6));
 
+        //double resolution, reset drawn points
         gRes = gRes * 2;
         gPrevRes = gRes * 2;
         gDrawnPoints = 1;
@@ -46,6 +48,8 @@ bool Mset::zoomIn(float newZoom)
         gDrawnLeft = -1;
         gDrawnRight = -1;
 //        tuneBatch();
+
+        //check the depth and change precision level accordingly
         gScaler = pow(2.0, -gTextZoomExp);
         gM.gPrecision = (gScaler < gSettings.quadZoom);
 
@@ -66,7 +70,10 @@ bool Mset::zoomOut(float newZoom)
         zoomIn(newZoom);
     else if (lastZoom != gTextZoomExp)
     {
+        //flips target texture to other texture, 0-1
         gTargetTexture = 1 - gTargetTexture;
+
+        //sets up texture to be rendered to
         GL_CALL(glBindTexture(GL_TEXTURE_2D, gTexture[gTargetTexture]));
         GL_CALL(glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, gSettings.winWidth, gSettings.winHeight, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, 0));
         GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, gTextureFrameBuffer));
@@ -191,11 +198,22 @@ bool Mset::restart(int r)
         GL_CALL(glClearBufferiv(GL_COLOR, 0, gTexEmpty));
     }
 
+    
+
+
     gTextZoomExp = floor(gSettings.zoomExp);
     gPaintZoom = pow(2.0, gSettings.zoomExp - gTextZoomExp);
     gScaler = pow(2.0, -gTextZoomExp);
     gM.gPrecision = (gScaler < gSettings.quadZoom);
 
+    if (gState == STATE_JULIA) {
+        gSettings.centrer = 0.0;
+        gScaler *= 1.5;
+    }
+    else if (gState == STATE_MANDEL) {
+        gSettings.centrer = -0.5;
+    }
+   
     bottom = gSettings.centrei.add(Quad(-gScaler * gSettings.winHeight / gSettings.winWidth));
     left = gSettings.centrer.add(Quad(-gScaler));
     step = Quad(gScaler).mul(Quad(2.0 / gSettings.winWidth));
@@ -207,6 +225,17 @@ bool Mset::iterating()
 {
     return (gPrevRes > 1 || gDrawnPoints < gNoPoints);
 }
+
+bool Mset::offsetJulia(glm::vec2 offset) {
+    gJuliaOffset += offset;
+    return true;
+}
+
+bool Mset::changeState(State state) {
+    gState = state;
+    return true;
+}
+
 
 void Mset::tuneBatch()
 {
@@ -222,6 +251,7 @@ bool Mset::iterate()
 {
     if (!gInitialised) return false;
 
+    
 
     if (gDrawnPoints >= gNoPoints && gRes != gPrevRes)
     {
@@ -246,6 +276,8 @@ bool Mset::iterate()
         GL_CALL(glUseProgram(gTexPassPID));
         GL_CALL(glUniform4i(gPassParamsLocation, 0, 0, 1, 1));
 
+       
+
 
         GL_CALL(glActiveTexture(GL_TEXTURE0));
         GL_CALL(glBindTexture(GL_TEXTURE_2D, gTexture[1 - gTargetTexture]));
@@ -256,26 +288,39 @@ bool Mset::iterate()
     }
     if (gDrawnPoints < gNoPoints)
     {
+
+        //benchmark
         struct _timeb startTime, endTime;
         _ftime(&startTime);
         gProgress = (int)((100.0 * gDrawnPoints / gNoPoints));
-        GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, gTextureFrameBuffer));
+        GL_CALL(glBindFramebuffer(GL_FRAMEBUFFER, gTextureFrameBuffer));       
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             printf("Framebuffer not complete at line %i\n", __LINE__);
 
-        GL_CALL(glBindVertexArray(gGenericVertexArray));
+        GL_CALL(glBindVertexArray(gGenericVertexArray));  
 
-        GL_CALL(glUseProgram(gTexturePID[gPrecision]));
-        GL_CALL(glUniform4d(gBLLocation[gPrecision], left.h, left.l, bottom.h, bottom.l));
-        GL_CALL(glUniform2d(gStepLocation[gPrecision], step.h, step.l));
-        GL_CALL(glUniform4i(gParamsLocation[gPrecision], gSettings.thresh, gSettings.winWidth, gSettings.winHeight, gRes));
+        if (gState == STATE_MANDEL) {
+            GL_CALL(glUseProgram(gTexturePID[gPrecision])); 
+            GL_CALL(glUniform4d(gBLLocation[gPrecision], left.h, left.l, bottom.h, bottom.l));
+            GL_CALL(glUniform2d(gStepLocation[gPrecision], step.h, step.l));
+            GL_CALL(glUniform4i(gParamsLocation[gPrecision], gSettings.thresh, gSettings.winWidth, gSettings.winHeight, gRes));
+        }
+        else if (gState == STATE_JULIA) {
+            GL_CALL(glUseProgram(gTextureJuliaPID[gPrecision]));  
+            GL_CALL(glUniform2d(gJuliaLocation[gPrecision], gJuliaOffset.x, gJuliaOffset.y));
+            GL_CALL(glUniform4d(gBLLocationJulia[gPrecision], left.h, left.l, bottom.h, bottom.l));
+            GL_CALL(glUniform2d(gStepLocationJulia[gPrecision], step.h, step.l));
+            GL_CALL(glUniform4i(gParamsLocationJulia[gPrecision], gSettings.thresh, gSettings.winWidth, gSettings.winHeight, gRes));
+        }
+       
+        
 
         GL_CALL(glActiveTexture(GL_TEXTURE0));
-        GL_CALL(glBindTexture(GL_TEXTURE_2D, gTexture[1-gTargetTexture]));
+        GL_CALL(glBindTexture(GL_TEXTURE_2D, gTexture[1-gTargetTexture]));  
 
         GL_CALL(glViewport(0,0,gSettings.winWidth,gSettings.winHeight));
-
         GL_CALL(glEnable(GL_SCISSOR_TEST));
+
         int yBatchStart = -1;
         int yBatchEnd = -1;
         if (gDrawnBottom < gSettings.winHeight - gDrawnTop)
@@ -311,6 +356,7 @@ bool Mset::iterate()
 //            printf("Bottom batch %d - %d\n", yBatchStart, yBatchEnd);
         }
 
+        //set up clip space so nothing is rendered past window, then draw to framebuffer
         GL_CALL(glScissor(0, yBatchStart, gSettings.winWidth, (yBatchEnd - yBatchStart)));
         GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 6));
         GL_CALL(glFinish());
@@ -339,6 +385,7 @@ bool Mset::iterate()
 
 void Mset::paint()
 {
+    
     if (!gInitialised) return;
     GL_CALL(glBindVertexArray(gGenericVertexArray));
 
@@ -357,4 +404,5 @@ void Mset::paint()
     GL_CALL(glViewport(0, 0, gSettings.winWidth, gSettings.winHeight));
 
     GL_CALL(glDrawArrays(GL_TRIANGLES, 0, 2*3));
+ 
 }

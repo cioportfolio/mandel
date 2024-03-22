@@ -49,10 +49,13 @@ bool Mset::initGL()
 
     GL_CALL(gTexturePID[0] = LoadShaders(true, "res/shaders/vertexpassthrough.txt", gSettings.lowShader.c_str()));
     GL_CALL(gTexturePID[1] = LoadShaders(true, "res/shaders/vertexpassthrough.txt", gSettings.highShader.c_str()));
+    GL_CALL(gTextureJuliaPID[0] = LoadShaders(true, "res/shaders/vertexpassthrough.txt", gSettings.lowShaderJulia.c_str()));
+    GL_CALL(gTextureJuliaPID[1] = LoadShaders(true, "res/shaders/vertexpassthrough.txt", gSettings.highShaderJulia.c_str()));
     GL_CALL(gTexPassPID = LoadShaders(true, "res/shaders/vertexpassthrough.txt", "res/shaders/calcfragmentpass.txt"));
 
     for (int i = 0; i < 2; i++)
     {
+       
         GL_GET_LOCATION(gTexturePID[i], bottomLeft, gBLLocation[i]);                       
         GL_GET_LOCATION(gTexturePID[i], step, gStepLocation[i]);
         GL_GET_LOCATION(gTexturePID[i], params, gParamsLocation[i]);
@@ -60,6 +63,17 @@ bool Mset::initGL()
 //        GL_GET_LOCATION(gTexturePID[i], rect, gCalcRectLocation[i]);
         GL_CALL(glUseProgram(gTexturePID[i]));
         GL_CALL(glUniform1i(gCalcTexLocation[i], 0));
+
+
+        GL_GET_LOCATION(gTextureJuliaPID[i], juliaOffset, gJuliaLocation[i]);
+        GL_GET_LOCATION(gTextureJuliaPID[i], bottomLeft, gBLLocationJulia[i]);
+        GL_GET_LOCATION(gTextureJuliaPID[i], step, gStepLocationJulia[i]);
+        GL_GET_LOCATION(gTextureJuliaPID[i], params, gParamsLocationJulia[i]);
+        GL_GET_LOCATION(gTextureJuliaPID[i], inTex, gCalcTexLocationJulia[i]);
+        //        GL_GET_LOCATION(gTexturePID[i], rect, gCalcRectLocation[i]);
+        GL_CALL(glUseProgram(gTextureJuliaPID[i]));
+        GL_CALL(glUniform2d(gJuliaLocation[i], gJuliaOffset.x,gJuliaOffset.y));
+        GL_CALL(glUniform1i(gCalcTexLocationJulia[i], 0));
     }
 
     int t = -1;

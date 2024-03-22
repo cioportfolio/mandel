@@ -29,6 +29,7 @@ void Mset::close()
     for (int i = 0; i < 2; i++)
     {
         GL_CALL(glDeleteProgram(gTexturePID[i]));
+        GL_CALL(glDeleteProgram(gTextureJuliaPID[i]));
     }
     GL_CALL(glDeleteProgram(gScreenPID));
     GL_CALL(glDeleteVertexArrays(1, &gGenericVertexArray));

@@ -125,6 +125,14 @@ bool Settings::load (const char* filename)
     if (itr != settingsDoc.MemberEnd())
         highShader = itr->value.GetString();
 
+    itr = settingsDoc.FindMember("lowshaderjulia");
+    if (itr != settingsDoc.MemberEnd())
+        lowShaderJulia = itr->value.GetString();
+
+    itr = settingsDoc.FindMember("highshaderjulia");
+    if (itr != settingsDoc.MemberEnd())
+        highShaderJulia = itr->value.GetString();
+
     itr = settingsDoc.FindMember("movzoomstart");
     if (itr != settingsDoc.MemberEnd())
         movZoomStart = itr->value.GetDouble();
